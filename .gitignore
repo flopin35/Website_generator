@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Environment variables — NEVER commit these
+.env
+.env.local
+.env.production
+.env*.local
+
+# User data — stays on server only
+.data/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+
+# Old legacy files
+backend/
+frontend/
+*.bat
+*.sh
+*.py
+config.py
+desktop.ini
+tsconfig.tsbuildinfo
+00_START_HERE.txt
+START_HERE.txt
+STATUS.txt
+DELIVERY_SUMMARY.txt
+COMPLETE_DELIVERY.txt
+CLAUDE_AI_SUMMARY.txt
