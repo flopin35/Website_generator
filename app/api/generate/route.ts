@@ -668,7 +668,7 @@ export async function POST(request: NextRequest) {
     const token = request.cookies.get('doltsite-token')?.value
     if (token) {
       const accountId = await verifyToken(token)
-      const account = accountId ? findAccountById(accountId) : null
+      const account = accountId ? await findAccountById(accountId) : null
       if (account) {
         if (isAccountExpired(account)) {
           return NextResponse.json(
@@ -685,7 +685,7 @@ export async function POST(request: NextRequest) {
 
         const detectedTemplate = detectTemplate(description)
         const html = generateTemplates[detectedTemplate](description)
-        const updated = incrementAccountUsage(account)
+        const updated = await incrementAccountUsage(account)
 
         return NextResponse.json({
           success: true, html, template: detectedTemplate,
