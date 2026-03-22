@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -97,8 +98,6 @@ function DocViewContent() {
     </div>
   )
 }
-
-import { Suspense } from 'react'
 
 export default function DocViewPage() {
   return (
