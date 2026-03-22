@@ -52,9 +52,9 @@
 When prompted on the "Import project" page, add:
 
 ```
-UPSTASH_REDIS_REST_URL = https://driving-cattle-80683.upstash.io
-UPSTASH_REDIS_REST_TOKEN = AW5BAWY2ZW5jMjhhYTdhNDI1ZGE1ZDI4NTZjYjhhYTY5MTYwYTA=
-JWT_SECRET = fsiADGxB8pbjMlIEygtV7U6vWFOedanCRY5QqcL2wKuT91hH
+UPSTASH_REDIS_REST_URL = https://your-upstash-url.upstash.io
+UPSTASH_REDIS_REST_TOKEN = your-upstash-token-here
+JWT_SECRET = your-jwt-secret-here
 OPENAI_API_KEY = sk-proj-your-openai-api-key-here
 ADMIN_PASSWORD = your-secure-admin-password
 ```
