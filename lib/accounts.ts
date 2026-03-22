@@ -116,8 +116,8 @@ export function todayStr() {
 // ── Usage/limit helpers ───────────────────────────────────────────────────────
 
 export const ACCOUNT_LIMITS: Record<Tier, number> = {
-  free: 2,
-  basic: 3,
+  free: 5,
+  basic: 10,
   standard: 200,
   premium: Infinity,
 }
