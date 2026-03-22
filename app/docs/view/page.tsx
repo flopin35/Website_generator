@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import Markdown from 'react-markdown'
@@ -97,6 +97,8 @@ function DocViewContent() {
     </div>
   )
 }
+
+import { Suspense } from 'react'
 
 export default function DocViewPage() {
   return (
