@@ -1,316 +1,329 @@
-# Ava - AI Web Generator
+# Doltsite - AI Website Generator
 
-A complete AI-powered website generation system. Build professional websites instantly with just a few clicks!
+A complete AI-powered website generation system with user authentication, payment management, and persistent data storage. Build professional websites instantly with just a few clicks!
+
+**Status**: ✅ Production-Ready | **Stack**: Next.js 14 + TypeScript + Upstash Redis
 
 ## 📋 Project Structure
 
 ```
 WG/
-├── frontend/
-│   ├── index.html          # Main UI
-│   ├── styles.css          # Styling
-│   └── script.js           # Frontend logic
-├── backend/
-│   ├── app.py              # Flask backend
-│   ├── requirements.txt     # Python dependencies
-│   └── README.md           # This file
-└── generated_sites/        # Output folder for generated websites
+├── app/
+│   ├── api/                          # API Route Handlers
+│   │   ├── auth/                     # Authentication (signup, login)
+│   │   ├── generate/route.ts         # Website generation
+│   │   ├── payment/                  # Payment processing
+│   │   └── usage/route.ts            # Usage tracking
+│   ├── admin/                        # Admin dashboard
+│   ├── layout.tsx                    # Root layout
+│   └── page.tsx                      # Home page
+├── components/                       # React components
+├── lib/
+│   ├── redis.ts                      # Redis client (Upstash)
+│   ├── accounts.ts                   # Account management
+│   ├── payments.ts                   # Payment management
+│   └── ...
+├── .env.local                        # Local environment variables (NEVER commit)
+├── .env.example                      # Environment template
+├── package.json                      # Node.js dependencies
+├── tsconfig.json                     # TypeScript configuration
+└── generated_sites/                  # Output folder for generated websites
 ```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Python 3.8+
-- pip
+- Node.js 18+
+- npm or yarn
 - Modern web browser
+- Upstash Redis account (free tier available)
+- OpenAI API key
 
 ### Installation & Setup
 
-1. **Clone/Extract the project**
+1. **Clone the project**
 
    ```bash
    cd c:\Users\HP\OneDrive\Desktop\WG
    ```
 
-2. **Install Python dependencies**
+2. **Install Node.js dependencies**
 
    ```bash
-   cd backend
-   pip install -r requirements.txt
+   npm install
    ```
 
-3. **Start the Flask server**
+3. **Set up environment variables**
+
+   Copy `.env.example` to `.env.local` and fill in your API keys:
 
    ```bash
-   python app.py
+   cp .env.example .env.local
    ```
 
-   Server will run at `http://localhost:5000`
+   Edit `.env.local` with:
+   - `OPENAI_API_KEY` from https://platform.openai.com/api-keys
+   - `UPSTASH_REDIS_REST_URL` & `UPSTASH_REDIS_REST_TOKEN` from https://console.upstash.com
+   - `JWT_SECRET` (generate a secure random string)
 
-4. **Open the frontend**
+4. **Start the development server**
 
    ```bash
-   # In another terminal, navigate to the frontend folder
-   cd ../frontend
-
-   # You can use Python's built-in server or any HTTP server
-   python -m http.server 8000
+   npm run dev
    ```
 
-   Then open `http://localhost:8000` in your browser
+   Server will run at `http://localhost:3000` (or 3001 if 3000 is in use)
 
-## 📅 Development Roadmap
+## 🎯 Key Features
 
-### ✅ Day 1 - Core Generation Engine
+### ✅ Authentication System
 
-- [x] AI receives client inputs (business name, industry, description, color, pages)
-- [x] Generates complete HTML structure (header, hero, services, footer)
-- [x] Generates CSS with customizable colors and styles
-- [x] Generates JavaScript for basic interactions
-- [x] Test with 2+ example sites
+- User sign-up with email validation
+- Secure login with bcrypt password hashing
+- JWT-based session management (30-day expiration)
+- Logout functionality
+- Cookie-based token storage (httpOnly, secure)
 
-### ✅ Day 2 - Zipping & Download System
+### ✅ Usage Tracking & Tier System
 
-- [x] Generate folder structure with proper organization
-- [x] Create ZIP files automatically
-- [x] Ensure all links, images, and scripts work
-- [x] Ready for local deployment
+| Tier | Generations | Cost | Features |
+|------|------------|------|----------|
+| **Free** | 5 total | Free | Basic website generation |
+| **Basic** | 10/day | $9.99/mo | Daily limit, priority support |
+| **Standard** | 200 total | $29.99/mo | Advanced templates, custom domain |
+| **Premium** | Unlimited | $99.99/mo | All features, white-label |
 
-### ✅ Day 3 - Customization Hooks
+### ✅ Website Generation
 
-- [x] Variables for PRIMARY_COLOR, LOGO_IMAGE, BUSINESS_NAME
-- [x] AI replaces variables based on client input
-- [x] Customizable styles (modern, corporate, creative, elegant)
-- [x] Easy manual customization
+- AI-powered website creation with OpenAI
+- Multiple industry templates
+- Customizable design styles
+- Responsive HTML/CSS/JS output
+- Real-time generation with usage tracking
 
-### ✅ Day 4 - E-Commerce Features
+### ✅ Payment & Upgrade System
 
-- [x] Product card generation
-- [x] Basic shopping cart (localStorage)
-- [x] Add to cart functionality
-- [x] Pre-defined product templates
+- Tier upgrade endpoint
+- Payment processing
+- Subscription expiration tracking
+- Usage limit enforcement
 
-### ✅ Day 5 - Testing & Bug Fixing
+### ✅ Admin Dashboard
 
-- [x] Support for 6 industry types
-- [x] All ZIP downloads functional
-- [x] Responsive design
-- [x] Cross-browser compatibility
+- View all users and usage statistics
+- Monitor system health
+- Password-protected interface
 
-## 💰 Pricing Model
+### ✅ Data Persistence
 
-| Package      | Price | Pages | Features                                  |
-| ------------ | ----- | ----- | ----------------------------------------- |
-| **Basic**    | $20   | 1-2   | Simple template, no custom edits          |
-| **Standard** | $40   | 3-5   | Customization options, multiple templates |
-| **Premium**  | $70+  | 5+    | Full customization, e-commerce ready      |
+- Redis (Upstash) for all persistent data
+- Automatic daily reset for basic tier
+- Usage history and analytics
 
-## 🎯 Features
+## 📚 API Endpoints
 
-### Core Capabilities
+### Authentication
 
-- ✨ AI-powered website generation
-- 🎨 6 different industry templates
-- 🎭 4 design styles (modern, corporate, creative, elegant)
-- 📱 Fully responsive design
-- 🛒 Optional e-commerce functionality
-- 💾 One-click ZIP download
-- 🔧 Easy customization
+| Method | Endpoint | Body | Returns |
+|--------|----------|------|---------|
+| POST | `/api/auth/signup` | `{email, password, name}` | `{success, account, token}` |
+| POST | `/api/auth/login` | `{email, password}` | `{success, account, token}` |
+| GET | `/api/auth/me` | — | `{account}` |
 
-### Supported Industries
+### Generation
 
-1. **Restaurant** - Food, delivery, catering
-2. **Portfolio/Agency** - Web design, development, apps
-3. **E-Commerce** - Products, shipping, payments
-4. **Service Business** - Expert service, custom solutions
-5. **Blog/News** - Articles, community, updates
-6. **Other** - Custom industries
+| Method | Endpoint | Body | Returns |
+|--------|----------|------|---------|
+| POST | `/api/generate` | `{prompt, style}` | `{html, css, js}` |
 
-### Design Styles
+### Usage & Limits
 
-1. **Modern** - Segoe UI, clean and contemporary
-2. **Corporate** - Georgia serif, professional
-3. **Creative** - Comic Sans, playful design
-4. **Elegant** - Garamond, sophisticated
+| Method | Endpoint | Returns |
+|--------|----------|---------|
+| GET | `/api/usage` | `{usage, remaining, tier, dailyUsage}` |
 
-## 🔌 API Endpoints
+### Payments
 
-### Generate Website
+| Method | Endpoint | Body | Returns |
+|--------|----------|------|---------|
+| POST | `/api/upgrade` | `{tier}` | `{success, account}` |
+| POST | `/api/payment/initiate` | `{tier}` | `{paymentUrl}` |
+| POST | `/api/payment/approve` | `{paymentId}` | `{success, account}` |
 
-**POST** `/api/generate-website`
+## 🔧 Configuration
 
-Request body:
+### Environment Variables
 
-```json
-{
-  "business_name": "Tech Innovations",
-  "industry": "portfolio",
-  "description": "We build amazing web solutions",
-  "pages": 3,
-  "primary_color": "#6366f1",
-  "business_style": "modern",
-  "include_ecommerce": false
-}
+**Required for local development:**
+
+```bash
+# JWT secret for signing auth tokens
+JWT_SECRET=your-secure-secret-here
+
+# OpenAI API Key (get from https://platform.openai.com/api-keys)
+OPENAI_API_KEY=sk-your-key-here
+
+# Upstash Redis credentials (from https://console.upstash.com)
+UPSTASH_REDIS_REST_URL=https://your-redis.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-token-here
 ```
 
-Response:
+**Optional:**
 
-```json
-{
-  "success": true,
-  "html_content": "...",
-  "css_content": "...",
-  "js_content": "...",
-  "message": "Website generated successfully!"
-}
+```bash
+# Admin password (defaults to: doltsite-admin-2025)
+ADMIN_PASSWORD=your-custom-password
+
+# App URL (for production)
+NEXT_PUBLIC_APP_URL=http://localhost:3001
 ```
 
-### Download Website
+### Vercel Deployment
 
-**POST** `/api/download-website`
+Set all environment variables in Vercel Dashboard:
+1. Go to Project → Settings → Environment Variables
+2. Add all variables listed above
+3. Redeploy: `git push origin main`
 
-Request body:
+**⚠️ NEVER commit `.env.local` to GitHub (it's in `.gitignore`)**
 
-```json
-{
-  "business_name": "Tech Innovations",
-  "html": "...",
-  "css": "...",
-  "js": "..."
-}
+## 🚀 Running Commands
+
+### Development
+
+```bash
+npm run dev          # Start dev server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run TypeScript & linter
 ```
 
-Returns: ZIP file download
+### Build Output
 
-### Health Check
-
-**GET** `/api/health`
-
-Response:
-
-```json
-{
-  "status": "running",
-  "version": "1.0.0",
-  "message": "Ava AI Web Generator is operational ✨"
-}
 ```
-
-## 🧪 Testing
-
-### Test Case 1: Restaurant Website
-
-- Industry: Restaurant
-- Pages: 3
-- Style: Modern
-- E-commerce: Yes
-- Expected: Header, hero, services (dining, delivery, catering), products
-
-### Test Case 2: Portfolio Agency
-
-- Industry: Portfolio
-- Pages: 5
-- Style: Corporate
-- E-commerce: No
-- Expected: Full professional website with all pages
-
-### Test Case 3: Online Store
-
-- Industry: E-Commerce
-- Pages: 7
-- Style: Creative
-- E-commerce: Yes
-- Expected: Complete e-commerce ready site with products
+✓ Compiled successfully
+✓ Linting and checking validity of types
+✓ Generating static pages (13/13)
+```
 
 ## 🛠️ Troubleshooting
 
-### CORS Issues
+### Redis Connection Issues
 
-If you get CORS errors, ensure the Flask server is running and CORS is enabled.
+**Problem**: "UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN not set"
+
+**Solution**: Add these to `.env.local`:
+```bash
+UPSTASH_REDIS_REST_URL=https://...upstash.io
+UPSTASH_REDIS_REST_TOKEN=...
+```
+
+### OpenAI API Errors
+
+**Problem**: "Invalid API key" or rate limiting
+
+**Solution**:
+1. Verify API key: https://platform.openai.com/api-keys
+2. Check account has credits
+3. Verify key is correct in `.env.local`
 
 ### Port Already in Use
 
-Change the port in `app.py`:
+**Problem**: Port 3000 is already in use
 
-```python
-if __name__ == '__main__':
-    app.run(debug=True, port=5001)  # Change 5000 to 5001
-```
+**Solution**: Dev server automatically falls back to port 3001. Access `http://localhost:3001`.
 
-### Static Files Not Loading
+### Data Lost After Redeploy
 
-Make sure you're serving the frontend with an HTTP server, not opening `index.html` directly.
+**Problem**: User accounts/usage disappeared after Vercel redeploy
 
-## 📚 File Descriptions
+**Solution**: Ensure Upstash Redis env vars are set in Vercel. Without Redis, data is in-memory only.
 
-### Frontend Files
+## 📦 Deployment
 
-**index.html**
+### Prerequisites
 
-- Main UI with all sections (Home, Generator, Pricing, About)
-- Form for collecting user inputs
-- Preview iframe for generated websites
-- Navigation and footer
+- [ ] Repository on GitHub
+- [ ] Vercel account (free tier available)
+- [ ] Upstash Redis account (free tier available)
+- [ ] OpenAI API key with credits
 
-**styles.css**
+### Step-by-Step Deployment
 
-- Modern, responsive design
-- Gradient backgrounds
-- Card-based layouts
-- Mobile-friendly media queries
-- CSS variables for easy customization
+1. **Verify local build works**
+   ```bash
+   npm run build
+   npm run lint
+   ```
 
-**script.js**
+2. **Push to GitHub**
+   ```bash
+   git push origin main
+   ```
 
-- Section navigation
-- Form validation and submission
-- API communication with backend
-- Download functionality
-- Preview display
+3. **Create Vercel project**
+   - Go to https://vercel.com
+   - Click "New Project"
+   - Connect GitHub repo
+   - Import project
 
-### Backend Files
+4. **Set environment variables in Vercel**
+   - Project → Settings → Environment Variables
+   - Add: JWT_SECRET, OPENAI_API_KEY, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
+   - Optional: ADMIN_PASSWORD, NEXT_PUBLIC_APP_URL
 
-**app.py**
+5. **Deploy**
+   - Click "Deploy"
+   - Wait for build to complete
+   - Access your live site
 
-- Flask server with CORS support
-- WebsiteGenerator class: Generates HTML, CSS, JS
-- WebsitePackager class: Creates ZIP files
-- API endpoints for generation and download
-- Day 1-5 implementation
+## 📝 Project Status
 
-**requirements.txt**
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Next.js Setup | ✅ Complete | v14.2.35 |
+| TypeScript | ✅ Complete | Full type safety |
+| Redis Persistence | ✅ Complete | Upstash integration |
+| Authentication | ✅ Complete | JWT + bcrypt |
+| Account Management | ✅ Complete | Tier-based limits |
+| Website Generation | ✅ Complete | OpenAI integration |
+| Payment System | ✅ Complete | Subscription handling |
+| Admin Dashboard | ✅ Complete | User management |
+| Production Build | ✅ Verified | Passes TypeScript checks |
+| Vercel Deployment | ✅ Ready | All env vars configured |
 
-- Flask: Web framework
-- Flask-CORS: Cross-origin requests
-- Werkzeug: WSGI utilities
+## 🔐 Security Features
 
-## 🚀 Future Enhancements
+- Passwords hashed with bcrypt
+- JWT tokens for session management
+- HTTP-only cookies to prevent XSS
+- Secure admin password configuration
+- No secrets in version control
+- Lazy-initialized Redis to prevent build errors
+- Environment variable validation
 
-- [ ] Payment integration (Stripe/PayPal)
-- [ ] Database for storing generated sites
-- [ ] User accounts and site management
-- [ ] Template marketplace
-- [ ] AI chatbot for site customization
-- [ ] SEO optimization
-- [ ] Analytics integration
-- [ ] Form submission handling
-- [ ] Email notifications
-- [ ] Version control for sites
+## 📞 Support & Documentation
 
-## 📝 License
+For detailed documentation, see:
+- `PRODUCTION_STATUS.md` - Complete production guide
+- `.env.example` - Environment variables template
+- `lib/accounts.ts` - Account management reference
+- `lib/redis.ts` - Redis client implementation
 
-This project is provided as-is for educational and commercial use.
+## 🚀 Next Steps
 
-## ✨ Support
+1. **Local Testing**: Run `npm run dev` and test sign-up/login
+2. **Vercel Setup**: Connect GitHub and set environment variables
+3. **Production Monitoring**: Check Vercel logs and Redis stats
+4. **User Feedback**: Gather feedback and iterate
+5. **Scale**: Add analytics, improve UI/UX, expand features
 
-For issues or questions:
+## 📄 License
 
-1. Check the troubleshooting section
-2. Review the API endpoints
-3. Test with the sample data provided
+This project is provided for educational and commercial use.
 
 ---
 
-**Built with ❤️ by Ava - AI Web Generator**
-_Making web design accessible to everyone_
+**Made with ❤️ - Doltsite**  
+_AI-powered website generation made simple_
