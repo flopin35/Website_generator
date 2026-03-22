@@ -11,12 +11,13 @@
 The original code tried to import `Suspense` in a 'use client' component:
 
 ```tsx
-'use client'
-import { useSearchParams } from 'next/navigation'
-import { useEffect, useState, Suspense } from 'react'  // ❌ Wrong: can't use Suspense in client component
+"use client";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react"; // ❌ Wrong: can't use Suspense in client component
 ```
 
 In Next.js 14, `Suspense` (from React) cannot be used directly in client components ('use client'). This caused the build to fail on Vercel because:
+
 1. Suspense is a React feature for server-side rendering
 2. Client components don't support pre-rendering with Suspense at the module boundary
 3. Vercel's build process strictly enforces this separation
@@ -26,22 +27,22 @@ In Next.js 14, `Suspense` (from React) cannot be used directly in client compone
 We separated the Suspense import to the end of the file where it's used in the default export:
 
 ```tsx
-'use client'
+"use client";
 
-import { useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'  // ✅ Only hooks now
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
-import Markdown from 'react-markdown'
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react"; // ✅ Only hooks now
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import Markdown from "react-markdown";
 
 // Client component (uses useSearchParams)
 function DocViewContent() {
-  const searchParams = useSearchParams()
+  const searchParams = useSearchParams();
   // ... component logic ...
 }
 
 // Import Suspense at the end, for server-side wrapping
-import { Suspense } from 'react'
+import { Suspense } from "react";
 
 // Server component wrapper
 export default function DocViewPage() {
@@ -49,7 +50,7 @@ export default function DocViewPage() {
     <Suspense fallback={<LoadingSpinner />}>
       <DocViewContent />
     </Suspense>
-  )
+  );
 }
 ```
 
@@ -68,7 +69,7 @@ This pattern is the recommended way to use Suspense with client components in Ne
 ✅ **Local build**: Passes  
 ✅ **TypeScript check**: No errors  
 ✅ **All pages generated**: 15/15  
-✅ **Vercel deployment**: Should now succeed  
+✅ **Vercel deployment**: Should now succeed
 
 ## What to Do Next
 

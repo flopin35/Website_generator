@@ -5,6 +5,7 @@ Get the Doltsite AI Website Generator running locally in 5 minutes.
 ## Prerequisites
 
 Make sure you have:
+
 - **Node.js 18+** - Download from https://nodejs.org/
 - **npm** (comes with Node.js)
 - A **GitHub account** and this repo cloned
@@ -61,6 +62,7 @@ npm run dev
 ```
 
 **Expected output:**
+
 ```
 ▲ Next.js 14.2.35
 - Local:        http://localhost:3000
@@ -102,13 +104,13 @@ Expected: HTML website generated and displayed in preview.
 
 ## 📁 Important Files
 
-| File | Purpose |
-|------|---------|
-| `.env.local` | Your API keys (⚠️ NEVER commit this!) |
-| `lib/redis.ts` | Redis connection |
-| `lib/accounts.ts` | User management |
-| `app/api/` | API endpoints |
-| `app/page.tsx` | Home page UI |
+| File              | Purpose                               |
+| ----------------- | ------------------------------------- |
+| `.env.local`      | Your API keys (⚠️ NEVER commit this!) |
+| `lib/redis.ts`    | Redis connection                      |
+| `lib/accounts.ts` | User management                       |
+| `app/api/`        | API endpoints                         |
+| `app/page.tsx`    | Home page UI                          |
 
 ## 🔧 Useful Commands
 
@@ -134,6 +136,7 @@ npm run lint
 ### Error: "OPENAI_API_KEY not set"
 
 **Fix**: Add to `.env.local`:
+
 ```bash
 OPENAI_API_KEY=sk-proj-your-actual-key-here
 ```
@@ -141,6 +144,7 @@ OPENAI_API_KEY=sk-proj-your-actual-key-here
 ### Error: "UPSTASH_REDIS_REST_URL not set"
 
 **Fix**: Add to `.env.local`:
+
 ```bash
 UPSTASH_REDIS_REST_URL=https://...upstash.io
 UPSTASH_REDIS_REST_TOKEN=your-token
@@ -155,6 +159,7 @@ Get these from: https://console.upstash.com → Create Database → REST API
 ### Can't login after restart
 
 **Check**:
+
 1. Verify Upstash credentials in `.env.local`
 2. Check Redis is running at https://console.upstash.com
 3. Verify database isn't full (delete old data if needed)

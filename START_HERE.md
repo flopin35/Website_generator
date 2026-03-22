@@ -5,6 +5,7 @@ Welcome to **Doltsite** - an AI-powered website generator built with Next.js, Ty
 ## What is Doltsite?
 
 Doltsite is a **full-stack web application** that lets users:
+
 - Create professional websites with AI
 - Track usage with tier-based limits
 - Upgrade to premium plans
@@ -17,6 +18,7 @@ Doltsite is a **full-stack web application** that lets users:
 ## 📖 Documentation Index
 
 ### For First-Time Users
+
 1. **[QUICK_START.md](QUICK_START.md)** ⭐ - Start here! 5-minute local setup
    - Install dependencies
    - Configure environment
@@ -24,6 +26,7 @@ Doltsite is a **full-stack web application** that lets users:
    - Test the app
 
 ### For Developers
+
 2. **[README.md](README.md)** - Project overview & tech stack
    - Architecture
    - API endpoints
@@ -37,6 +40,7 @@ Doltsite is a **full-stack web application** that lets users:
    - Configuration guide
 
 ### For QA & Testing
+
 4. **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Comprehensive testing procedures
    - Authentication tests
    - Usage tracking tests
@@ -45,6 +49,7 @@ Doltsite is a **full-stack web application** that lets users:
    - Full test checklist
 
 ### For Deployment
+
 5. **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Step-by-step Vercel deployment
    - Prerequisites
    - Pre-deployment verification
@@ -55,6 +60,7 @@ Doltsite is a **full-stack web application** that lets users:
    - Troubleshooting
 
 ### Project Status
+
 6. **[COMPLETE_STATUS_REPORT.md](COMPLETE_STATUS_REPORT.md)** - Detailed project status
    - What's implemented
    - Test results
@@ -67,6 +73,7 @@ Doltsite is a **full-stack web application** that lets users:
 ## 🎯 Quick Navigation
 
 ### Get Running in 5 Minutes
+
 ```bash
 cd c:\Users\HP\OneDrive\Desktop\WG
 npm install
@@ -77,6 +84,7 @@ npm run dev
 ```
 
 ### Key Commands
+
 ```bash
 npm run dev      # Start development server
 npm run build    # Build for production
@@ -85,6 +93,7 @@ npm run lint     # Check TypeScript & linting
 ```
 
 ### Project Structure
+
 ```
 WG/
 ├── app/              # Next.js pages & API routes
@@ -106,7 +115,7 @@ WG/
 ✅ **Payment System** - Upgrade to higher tiers  
 ✅ **Admin Dashboard** - Monitor users and usage  
 ✅ **Persistent Storage** - Redis for data persistence  
-✅ **Beautiful UI** - Modern, responsive design  
+✅ **Beautiful UI** - Modern, responsive design
 
 ---
 
@@ -125,18 +134,23 @@ WG/
 ## 📋 Common Tasks
 
 ### Setup Locally
+
 👉 Follow **[QUICK_START.md](QUICK_START.md)**
 
 ### Test Functionality
+
 👉 Follow **[TESTING_GUIDE.md](TESTING_GUIDE.md)**
 
 ### Deploy to Production
+
 👉 Follow **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)**
 
 ### Understand Architecture
+
 👉 Read **[PRODUCTION_STATUS.md](PRODUCTION_STATUS.md)**
 
 ### Check Project Status
+
 👉 Review **[COMPLETE_STATUS_REPORT.md](COMPLETE_STATUS_REPORT.md)**
 
 ---
@@ -144,6 +158,7 @@ WG/
 ## 🔐 Environment Variables
 
 You'll need:
+
 - **OpenAI API Key** - Get from https://platform.openai.com/api-keys
 - **Upstash Redis** - Create free at https://console.upstash.com
 - **JWT Secret** - Any random string (32+ chars recommended)
@@ -155,12 +170,14 @@ See **[QUICK_START.md](QUICK_START.md)** for detailed setup.
 ## 🚀 Deploy to Production
 
 1. **Verify local build works**
+
    ```bash
    npm run build
    npm run lint
    ```
 
 2. **Push to GitHub**
+
    ```bash
    git push origin main
    ```
@@ -177,34 +194,38 @@ See **[QUICK_START.md](QUICK_START.md)** for detailed setup.
 
 ## 📊 Project Status
 
-| Component | Status |
-|-----------|--------|
-| Frontend UI | ✅ Complete |
-| Authentication | ✅ Complete |
+| Component          | Status      |
+| ------------------ | ----------- |
+| Frontend UI        | ✅ Complete |
+| Authentication     | ✅ Complete |
 | Website Generation | ✅ Complete |
-| Usage Tracking | ✅ Complete |
-| Payment System | ✅ Complete |
-| Admin Dashboard | ✅ Complete |
-| Redis Persistence | ✅ Complete |
-| Documentation | ✅ Complete |
-| Production Build | ✅ Verified |
+| Usage Tracking     | ✅ Complete |
+| Payment System     | ✅ Complete |
+| Admin Dashboard    | ✅ Complete |
+| Redis Persistence  | ✅ Complete |
+| Documentation      | ✅ Complete |
+| Production Build   | ✅ Verified |
 
 ---
 
 ## 🎓 Learning Resources
 
 ### Next.js
+
 - [Next.js Docs](https://nextjs.org/docs)
 - [API Routes](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)
 
 ### TypeScript
+
 - [TypeScript Docs](https://www.typescriptlang.org/docs/)
 
 ### Upstash Redis
+
 - [Upstash Docs](https://upstash.com/docs/redis)
 - [Upstash Console](https://console.upstash.com)
 
 ### Vercel Deployment
+
 - [Vercel Docs](https://vercel.com/docs)
 - [Environment Variables](https://vercel.com/docs/concepts/projects/environment-variables)
 
@@ -213,15 +234,19 @@ See **[QUICK_START.md](QUICK_START.md)** for detailed setup.
 ## 🐛 Troubleshooting
 
 ### Port 3000 in use?
+
 Dev server automatically falls back to 3001. Access `http://localhost:3001`
 
 ### Can't login?
+
 Check your `.env.local` has correct Upstash credentials.
 
 ### OpenAI errors?
+
 Verify API key is correct and has credits available.
 
 ### Need help?
+
 1. Check the relevant guide (QUICK_START, DEPLOYMENT, TESTING, etc.)
 2. Review browser console (F12) for error details
 3. Check Vercel logs: `vercel logs --follow`
@@ -250,6 +275,7 @@ Verify API key is correct and has credits available.
 **Doltsite is a production-ready, feature-complete AI website generator.**
 
 It has everything needed to launch a successful product:
+
 - Secure authentication
 - Usage tracking & tier limits
 - Payment system

@@ -17,7 +17,7 @@ Doltsite is a **full-stack AI website generator** with a robust account system, 
 ✅ **Admin Dashboard** - Control panel for monitoring users and usage  
 ✅ **Improved UX** - Free tier: 5 generations, Basic tier: 10 daily generations  
 ✅ **Vercel Ready** - Environment-based configuration, no local file dependencies  
-✅ **Production Security** - Secure admin password, configurable API keys  
+✅ **Production Security** - Secure admin password, configurable API keys
 
 ---
 
@@ -98,18 +98,19 @@ Set these environment variables in [Vercel Dashboard](https://vercel.com/dashboa
 1. Go to your Vercel project → Settings → Environment Variables
 2. Add the following:
 
-| Variable | Source | Value |
-|----------|--------|-------|
-| `JWT_SECRET` | Generate a secure random string | `your-secret-string` |
-| `OPENAI_API_KEY` | [platform.openai.com](https://platform.openai.com/api-keys) | `sk-...` |
-| `UPSTASH_REDIS_REST_URL` | [console.upstash.com](https://console.upstash.com) | `https://...upstash.io` |
-| `UPSTASH_REDIS_REST_TOKEN` | [console.upstash.com](https://console.upstash.com) | Base64-encoded token |
-| `ADMIN_PASSWORD` | Your choice | Custom password |
-| `NEXT_PUBLIC_APP_URL` | Your Vercel domain | `https://your-app.vercel.app` |
+| Variable                   | Source                                                      | Value                         |
+| -------------------------- | ----------------------------------------------------------- | ----------------------------- |
+| `JWT_SECRET`               | Generate a secure random string                             | `your-secret-string`          |
+| `OPENAI_API_KEY`           | [platform.openai.com](https://platform.openai.com/api-keys) | `sk-...`                      |
+| `UPSTASH_REDIS_REST_URL`   | [console.upstash.com](https://console.upstash.com)          | `https://...upstash.io`       |
+| `UPSTASH_REDIS_REST_TOKEN` | [console.upstash.com](https://console.upstash.com)          | Base64-encoded token          |
+| `ADMIN_PASSWORD`           | Your choice                                                 | Custom password               |
+| `NEXT_PUBLIC_APP_URL`      | Your Vercel domain                                          | `https://your-app.vercel.app` |
 
 3. Click "Save" and redeploy
 
 **Redeploy on Vercel:**
+
 ```bash
 git push origin main  # Trigger auto-deployment
 ```
@@ -119,6 +120,7 @@ git push origin main  # Trigger auto-deployment
 ## 📊 Feature Status
 
 ### ✅ Authentication System
+
 - User sign-up with email validation
 - Secure login with bcrypt password hashing
 - JWT-based session management (30-day expiration)
@@ -126,12 +128,14 @@ git push origin main  # Trigger auto-deployment
 - Cookie-based token storage (httpOnly, secure)
 
 ### ✅ Account Management
+
 - User profile storage (email, name, tier)
 - Account activation/expiration handling
 - Tier-based usage limits
 - Daily generation reset for Basic tier
 
 ### ✅ Usage Tracking
+
 - Free tier: **5 total generations**
 - Basic tier: **10 daily generations** (resets daily)
 - Standard tier: **200 total generations**
@@ -139,24 +143,28 @@ git push origin main  # Trigger auto-deployment
 - Real-time usage sync via Redis
 
 ### ✅ Payment & Upgrade System
+
 - Tier upgrade endpoint (`/api/upgrade`)
 - Payment initiation (`/api/payment/initiate`)
 - Payment approval (`/api/payment/approve`)
 - Subscription expiration tracking
 
 ### ✅ Website Generation
+
 - Endpoint: `POST /api/generate`
 - Requires authentication
 - Checks usage limits before generation
 - Integrates with OpenAI API
 
 ### ✅ Admin Dashboard
+
 - Endpoint: `/admin`
 - Password-protected (configurable `ADMIN_PASSWORD`)
 - View all users and usage statistics
 - Monitor system health
 
 ### ✅ Data Persistence
+
 - **Redis (Upstash)** for all persistent data:
   - User accounts
   - Payment records
@@ -198,31 +206,31 @@ npm run lint              # Run ESLint
 
 ### Authentication
 
-| Method | Endpoint | Body | Returns |
-|--------|----------|------|---------|
-| POST | `/api/auth/signup` | `{email, password, name}` | `{success, account, token}` |
-| POST | `/api/auth/login` | `{email, password}` | `{success, account, token}` |
-| GET | `/api/auth/me` | — | `{account}` or `{error}` |
+| Method | Endpoint           | Body                      | Returns                     |
+| ------ | ------------------ | ------------------------- | --------------------------- |
+| POST   | `/api/auth/signup` | `{email, password, name}` | `{success, account, token}` |
+| POST   | `/api/auth/login`  | `{email, password}`       | `{success, account, token}` |
+| GET    | `/api/auth/me`     | —                         | `{account}` or `{error}`    |
 
 ### Generation
 
-| Method | Endpoint | Body | Returns |
-|--------|----------|------|---------|
-| POST | `/api/generate` | `{prompt, style}` | `{html, css, js}` |
+| Method | Endpoint        | Body              | Returns           |
+| ------ | --------------- | ----------------- | ----------------- |
+| POST   | `/api/generate` | `{prompt, style}` | `{html, css, js}` |
 
 ### Usage & Limits
 
-| Method | Endpoint | Returns |
-|--------|----------|---------|
-| GET | `/api/usage` | `{usage, remaining, tier}` |
+| Method | Endpoint     | Returns                    |
+| ------ | ------------ | -------------------------- |
+| GET    | `/api/usage` | `{usage, remaining, tier}` |
 
 ### Payments
 
-| Method | Endpoint | Body | Returns |
-|--------|----------|------|---------|
-| POST | `/api/payment/initiate` | `{tier}` | `{paymentUrl}` |
-| POST | `/api/payment/approve` | `{paymentId}` | `{success, account}` |
-| POST | `/api/upgrade` | `{tier}` | `{success, account}` |
+| Method | Endpoint                | Body          | Returns              |
+| ------ | ----------------------- | ------------- | -------------------- |
+| POST   | `/api/payment/initiate` | `{tier}`      | `{paymentUrl}`       |
+| POST   | `/api/payment/approve`  | `{paymentId}` | `{success, account}` |
+| POST   | `/api/upgrade`          | `{tier}`      | `{success, account}` |
 
 ---
 
@@ -231,6 +239,7 @@ npm run lint              # Run ESLint
 ### Issue: "Redis not connecting"
 
 **Solution**: Verify Upstash credentials in `.env.local`:
+
 ```bash
 UPSTASH_REDIS_REST_URL=https://...upstash.io
 UPSTASH_REDIS_REST_TOKEN=...
@@ -239,6 +248,7 @@ UPSTASH_REDIS_REST_TOKEN=...
 ### Issue: "OpenAI API error"
 
 **Solution**: Verify API key has credits and is correct:
+
 ```bash
 OPENAI_API_KEY=sk-proj-...
 ```
@@ -246,6 +256,7 @@ OPENAI_API_KEY=sk-proj-...
 ### Issue: "Admin page 403 error"
 
 **Solution**: Check admin password in environment:
+
 ```bash
 ADMIN_PASSWORD=your-password  # Or default: doltsite-admin-2025
 ```
@@ -273,6 +284,7 @@ Before deploying to Vercel:
 - [ ] Verify OpenAI API key has available credits
 
 **Deploy:**
+
 ```bash
 git push origin main  # Vercel auto-deploys
 ```
@@ -281,16 +293,16 @@ git push origin main  # Vercel auto-deploys
 
 ## 📚 Key Files Reference
 
-| File | Purpose |
-|------|---------|
-| `lib/redis.ts` | Lazy-initialized Upstash Redis client |
-| `lib/accounts.ts` | User account CRUD & auth helpers |
-| `lib/payments.ts` | Payment & subscription management |
-| `app/api/auth/*` | Authentication routes |
-| `app/api/generate/route.ts` | Website generation engine |
-| `app/api/*/route.ts` | API endpoints |
-| `.env.local` | Local secrets (DO NOT COMMIT) |
-| `.env.example` | Template for `.env.local` |
+| File                        | Purpose                               |
+| --------------------------- | ------------------------------------- |
+| `lib/redis.ts`              | Lazy-initialized Upstash Redis client |
+| `lib/accounts.ts`           | User account CRUD & auth helpers      |
+| `lib/payments.ts`           | Payment & subscription management     |
+| `app/api/auth/*`            | Authentication routes                 |
+| `app/api/generate/route.ts` | Website generation engine             |
+| `app/api/*/route.ts`        | API endpoints                         |
+| `.env.local`                | Local secrets (DO NOT COMMIT)         |
+| `.env.example`              | Template for `.env.local`             |
 
 ---
 
@@ -309,6 +321,7 @@ git push origin main  # Vercel auto-deploys
 ## 📞 Support
 
 For issues or questions:
+
 1. Check `TROUBLESHOOTING.md` for common problems
 2. Review Vercel logs: `vercel logs --follow`
 3. Check Redis status: https://console.upstash.com
@@ -319,4 +332,4 @@ For issues or questions:
 **Project Status**: ✅ Production-Ready  
 **Last Deployment**: Via GitHub push to Vercel  
 **Data Persistence**: ✅ Upstash Redis  
-**Security**: ✅ JWT + bcrypt + secure env vars  
+**Security**: ✅ JWT + bcrypt + secure env vars

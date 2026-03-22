@@ -19,6 +19,7 @@ npm run build
 ```
 
 Expected output:
+
 - ✓ Compiled successfully
 - ✓ Linting and checking validity of types
 - ✓ Generating static pages (13/13)
@@ -54,12 +55,14 @@ Expected: No critical errors.
 5. Submit form
 
 Expected:
+
 - Account created successfully
 - Redirected to dashboard
 - Cookie `doltsite-token` set
 - Account data stored in Redis
 
 **Verify in Redis**:
+
 ```bash
 curl -X GET https://your-redis.upstash.io/get/account_email:test@example.com \
   -H "Authorization: Bearer YOUR_TOKEN"
@@ -75,6 +78,7 @@ curl -X GET https://your-redis.upstash.io/get/account_email:test@example.com \
 4. Submit
 
 Expected:
+
 - Login successful
 - Redirected to dashboard
 - JWT token issued
@@ -87,6 +91,7 @@ Expected:
    - Non-existent email
 
 Expected:
+
 - Error message displayed
 - No account created/modified
 
@@ -98,6 +103,7 @@ Expected:
    - "@example.com"
 
 Expected:
+
 - Validation error displayed
 - Account not created
 
@@ -106,6 +112,7 @@ Expected:
 1. While logged in, click "Logout"
 
 Expected:
+
 - Session cleared
 - Redirected to home page
 - Cookie removed
@@ -123,6 +130,7 @@ curl http://localhost:3001/api/usage \
 ```
 
 Expected response:
+
 ```json
 {
   "tier": "free",
@@ -139,6 +147,7 @@ Expected response:
 2. Try to generate 6th website
 
 Expected:
+
 - First 5 succeed with message
 - 6th returns error: "Limit reached for this tier"
 
@@ -148,6 +157,7 @@ Expected:
 2. Generate 10 websites on Day 1
 
 Expected:
+
 - All 10 succeed
 - `dailyUsage` = 10
 
@@ -155,6 +165,7 @@ Expected:
 4. Check usage
 
 Expected:
+
 - `dailyUsage` = 0
 - Can generate 10 more
 
@@ -168,6 +179,7 @@ Expected:
 4. Submit
 
 Expected:
+
 - Loading indicator appears
 - HTML/CSS/JS generated
 - Preview shows website
@@ -179,6 +191,7 @@ Expected:
 2. Try to generate website
 
 Expected:
+
 - Error message: "Failed to generate website"
 - Usage NOT incremented
 
@@ -188,6 +201,7 @@ Expected:
 2. Try to access `/api/generate` directly
 
 Expected:
+
 - 401 Unauthorized error
 - No website generated
 
@@ -206,6 +220,7 @@ curl -X POST http://localhost:3001/api/upgrade \
 ```
 
 Expected:
+
 - Account tier updated to "basic"
 - Subscription timestamp set
 - Usage limits adjusted
@@ -217,6 +232,7 @@ Expected:
 3. Complete payment flow
 
 Expected:
+
 - Payment processed
 - Tier upgraded
 - Dashboard updated with new limits
@@ -228,6 +244,7 @@ Expected:
 3. Try to generate website
 
 Expected:
+
 - Error: "Your subscription has expired"
 - Redirected to upgrade page
 
@@ -239,6 +256,7 @@ Expected:
 2. Enter password: `doltsite-admin-2025` (or your custom `ADMIN_PASSWORD`)
 
 Expected:
+
 - Dashboard loads
 - Shows list of all users
 - Shows system statistics
@@ -249,6 +267,7 @@ Expected:
 2. Enter wrong password
 
 Expected:
+
 - Error message
 - Denied access
 
@@ -258,6 +277,7 @@ Expected:
 2. Look for user statistics
 
 Expected:
+
 - Total users displayed
 - Free/Basic/Standard/Premium tier counts
 - Total API calls
@@ -274,6 +294,7 @@ Expected:
 5. Login as "persistence@test.com"
 
 Expected:
+
 - User account still exists
 - Usage = 1 (not reset)
 - All data persists
@@ -291,6 +312,7 @@ curl -X GET https://your-redis.upstash.io/get/account:acc-1234567890 \
 ```
 
 Expected:
+
 - Valid JSON responses
 - All created accounts visible
 
@@ -307,6 +329,7 @@ npm run start
 ```
 
 Expected:
+
 - Build completes without errors
 - Server starts on port 3000
 - Can access http://localhost:3000
@@ -323,6 +346,7 @@ After `npm run build`:
 ```
 
 Expected:
+
 - No errors in output
 - All routes compiled
 - File sizes reasonable
@@ -378,6 +402,7 @@ curl -s -X GET http://localhost:3001/api/usage \
 ## 📋 Pre-Production Checklist
 
 ### Security
+
 - [ ] No secrets in GitHub (`.env.local` in `.gitignore`)
 - [ ] All API keys valid and have sufficient credentials
 - [ ] JWT_SECRET is strong (32+ characters)
@@ -385,12 +410,14 @@ curl -s -X GET http://localhost:3001/api/usage \
 - [ ] Passwords are bcrypt-hashed
 
 ### Performance
+
 - [ ] `npm run build` completes in < 30 seconds
 - [ ] Production bundle size < 5MB
 - [ ] No console errors in production
 - [ ] Redis connections working properly
 
 ### Functionality
+
 - [ ] Sign-up, login, logout working
 - [ ] Usage tracking accurate
 - [ ] Website generation working
@@ -399,6 +426,7 @@ curl -s -X GET http://localhost:3001/api/usage \
 - [ ] Data persists after restart
 
 ### Deployment
+
 - [ ] All Vercel env vars set
 - [ ] GitHub repo connected to Vercel
 - [ ] `.env.local` NOT in git history
@@ -406,6 +434,7 @@ curl -s -X GET http://localhost:3001/api/usage \
 - [ ] `npx tsc --noEmit` passes
 
 ### Monitoring
+
 - [ ] Vercel deployment successful
 - [ ] Redis connection established
 - [ ] OpenAI API responding
@@ -469,6 +498,7 @@ Once all tests pass:
 ---
 
 For issues, check:
+
 1. `.env.local` is correct
 2. Upstash Redis is running
 3. OpenAI API has credits

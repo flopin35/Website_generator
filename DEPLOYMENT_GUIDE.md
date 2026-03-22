@@ -22,6 +22,7 @@ npm run build
 ```
 
 Expected output:
+
 ```
 ✓ Compiled successfully
 ✓ Linting and checking validity of types
@@ -40,6 +41,7 @@ npm run start
 Access: http://localhost:3000
 
 Test:
+
 - [ ] Sign up works
 - [ ] Login works
 - [ ] Can generate website
@@ -53,6 +55,7 @@ cat .env.local
 ```
 
 Must have:
+
 - ✅ OPENAI_API_KEY (not empty, not "sk-your-key-here")
 - ✅ UPSTASH_REDIS_REST_URL (not empty, https://...)
 - ✅ UPSTASH_REDIS_REST_TOKEN (not empty)
@@ -67,6 +70,7 @@ cat .gitignore | grep env.local
 Should output: `.env.local`
 
 If not in .gitignore, add it:
+
 ```bash
 echo ".env.local" >> .gitignore
 git add .gitignore
@@ -82,6 +86,7 @@ git status
 Should show: `nothing to commit, working tree clean`
 
 If not, commit changes:
+
 ```bash
 git add .
 git commit -m "Final changes before deployment"
@@ -100,6 +105,7 @@ Wait for push to complete. Verify on GitHub: https://github.com/flopin35/Website
 ### 2.2 Verify GitHub Repository
 
 Check:
+
 - [ ] Latest code is on `main` branch
 - [ ] `.env.local` is NOT in repository
 - [ ] `package.json` exists
@@ -127,18 +133,20 @@ In the import flow, you'll see "Environment Variables" section.
 
 Add the following variables:
 
-| Variable | Value | Source |
-|----------|-------|--------|
-| `JWT_SECRET` | Generate random string (32+ chars) | `cat /dev/urandom \| base64 \| head -c 32` |
-| `OPENAI_API_KEY` | `sk-proj-...` | https://platform.openai.com/api-keys |
-| `UPSTASH_REDIS_REST_URL` | `https://...upstash.io` | https://console.upstash.com |
-| `UPSTASH_REDIS_REST_TOKEN` | Your token | https://console.upstash.com |
-| `ADMIN_PASSWORD` | Your choice | Whatever you want |
+| Variable                   | Value                              | Source                                     |
+| -------------------------- | ---------------------------------- | ------------------------------------------ |
+| `JWT_SECRET`               | Generate random string (32+ chars) | `cat /dev/urandom \| base64 \| head -c 32` |
+| `OPENAI_API_KEY`           | `sk-proj-...`                      | https://platform.openai.com/api-keys       |
+| `UPSTASH_REDIS_REST_URL`   | `https://...upstash.io`            | https://console.upstash.com                |
+| `UPSTASH_REDIS_REST_TOKEN` | Your token                         | https://console.upstash.com                |
+| `ADMIN_PASSWORD`           | Your choice                        | Whatever you want                          |
 
 **How to get each:**
 
 #### JWT_SECRET
+
 Generate a random 32-character string:
+
 - Windows PowerShell:
   ```powershell
   -join ([char[]]'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' | Get-Random -Count 32)
@@ -146,12 +154,14 @@ Generate a random 32-character string:
 - Or just use any long random string like: `aB3$xKmP9@Lq#Vw7Yz2Dc5FgH8Jn4Rs6Tu`
 
 #### OPENAI_API_KEY
+
 1. Go to https://platform.openai.com/api-keys
 2. Click "Create new secret key"
 3. Copy the key (starts with `sk-proj-`)
 4. Paste into Vercel
 
 #### UPSTASH_REDIS_REST_URL & UPSTASH_REDIS_REST_TOKEN
+
 1. Go to https://console.upstash.com
 2. Click "Create Database"
 3. Choose "Multi-Region" or "Single Region" (free tier works)
@@ -162,12 +172,14 @@ Generate a random 32-character string:
    - `UPSTASH_REDIS_REST_TOKEN` (long base64 string)
 
 #### ADMIN_PASSWORD
+
 Choose something secure and different from your login password.
 Example: `MySecure@dmin2025`
 
 ### 3.4 Configure Build Settings
 
 Keep defaults:
+
 - **Framework**: Next.js
 - **Build Command**: `npm run build`
 - **Output Directory**: `.next`
@@ -179,6 +191,7 @@ Keep defaults:
 2. Wait for deployment to complete (takes 2-5 minutes)
 
 Expected output:
+
 ```
 ✓ Production build complete
 ✓ Assigned domain: xxx.vercel.app
@@ -195,21 +208,25 @@ Expected output:
 ### 4.2 Test Core Functionality
 
 #### Sign Up
+
 1. Click "Sign Up"
 2. Create account with test data
 3. Verify account created and logged in
 
 #### Login
+
 1. Logout
 2. Try login with same credentials
 3. Verify login successful
 
 #### Generate Website
+
 1. Enter a prompt
 2. Click "Generate"
 3. Verify website preview shows
 
 #### Admin Dashboard
+
 1. Go to `/admin`
 2. Enter admin password
 3. Verify dashboard loads
@@ -233,6 +250,7 @@ vercel logs --follow
 ```
 
 Should show:
+
 ```
 ✓ [api/auth/signup] User created
 ✓ [api/generate] Website generated
@@ -257,6 +275,7 @@ NEXT_PUBLIC_APP_URL=https://yourdomain.com
 ```
 
 Then redeploy:
+
 ```bash
 git push origin main  # Triggers automatic redeploy
 ```
@@ -266,12 +285,14 @@ git push origin main  # Triggers automatic redeploy
 ### 6.1 Set Up Error Alerts
 
 In Vercel:
+
 1. Project → Settings → Error Notifications
 2. Add email to be notified of failures
 
 ### 6.2 Monitor Redis Usage
 
 In Upstash:
+
 1. Go to your database
 2. Check "Stats" tab for:
    - Total requests
@@ -287,6 +308,7 @@ In Upstash:
 ### 6.4 Regular Backups
 
 **Upstash** automatically backs up data, but you can:
+
 1. Manually export data from https://console.upstash.com
 2. Save backups to secure location
 3. Test restores periodically
@@ -295,7 +317,8 @@ In Upstash:
 
 ### Build Failed: "Cannot find module '@upstash/redis'"
 
-**Fix**: 
+**Fix**:
+
 ```bash
 npm install @upstash/redis
 git push origin main
@@ -304,6 +327,7 @@ git push origin main
 ### Deployment Failed: "Missing Environment Variable"
 
 **Check**:
+
 1. Vercel → Project Settings → Environment Variables
 2. Verify all variables are set
 3. Check for typos in variable names
@@ -312,23 +336,27 @@ git push origin main
 ### Site Not Connecting to Redis
 
 **Check**:
+
 1. UPSTASH_REDIS_REST_URL is correct (https://...)
 2. UPSTASH_REDIS_REST_TOKEN is correct (not truncated)
 3. Upstash database is running (https://console.upstash.com)
 4. Redis quota not exceeded
 
 **Fix**:
+
 1. Update env vars in Vercel
 2. Redeploy
 
 ### Slow Response Times
 
 **Check**:
+
 1. Redis response time in Upstash dashboard
 2. OpenAI API latency
 3. Vercel function cold starts
 
 **Optimize**:
+
 1. Upgrade Upstash to paid tier
 2. Use edge regions closest to users
 3. Implement caching
@@ -379,15 +407,18 @@ git push origin main
 ## Post-Deployment Maintenance
 
 ### Daily
+
 - Check Vercel deployment logs
 - Monitor error rates
 
 ### Weekly
+
 - Review user accounts and usage
 - Check API costs (OpenAI)
 - Verify Redis data growth
 
 ### Monthly
+
 - Review performance metrics
 - Update dependencies: `npm update`
 - Optimize slow endpoints
@@ -407,6 +438,7 @@ For deployment issues:
 Your Doltsite is now live in production!
 
 **Next Steps**:
+
 - Share your URL with users
 - Gather feedback
 - Monitor usage and costs

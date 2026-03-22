@@ -19,7 +19,7 @@ Doltsite is a **fully functional AI-powered website generator** with:
 ✅ **Website Generation Engine** (OpenAI integration)  
 ✅ **Beautiful Modern UI** (Responsive design, dark theme)  
 ✅ **Production-Ready Code** (TypeScript, no errors, passes build)  
-✅ **Comprehensive Documentation** (Setup, Testing, Deployment)  
+✅ **Comprehensive Documentation** (Setup, Testing, Deployment)
 
 ---
 
@@ -27,44 +27,44 @@ Doltsite is a **fully functional AI-powered website generator** with:
 
 ### Frontend (Next.js + React + Tailwind)
 
-| Component | Status | Features |
-|-----------|--------|----------|
-| **Home Page** | ✅ Complete | Hero, input, live preview, auth buttons |
-| **Auth Modal** | ✅ Complete | Sign up, Login, validation, error handling |
-| **Account Menu** | ✅ Complete | Profile dropdown, upgrade, logout |
-| **Preview Window** | ✅ Complete | Live HTML/CSS/JS preview |
-| **Payment Flow** | ✅ Complete | Tier selection, upgrade modal |
-| **Admin Dashboard** | ✅ Complete | Password-protected, user stats |
-| **Pricing Page** | ✅ Complete | Plan comparison, feature list |
-| **Loading States** | ✅ Complete | Spinners, progress indicators |
-| **Error Handling** | ✅ Complete | User-friendly messages |
-| **Responsive Design** | ✅ Complete | Mobile, tablet, desktop |
+| Component             | Status      | Features                                   |
+| --------------------- | ----------- | ------------------------------------------ |
+| **Home Page**         | ✅ Complete | Hero, input, live preview, auth buttons    |
+| **Auth Modal**        | ✅ Complete | Sign up, Login, validation, error handling |
+| **Account Menu**      | ✅ Complete | Profile dropdown, upgrade, logout          |
+| **Preview Window**    | ✅ Complete | Live HTML/CSS/JS preview                   |
+| **Payment Flow**      | ✅ Complete | Tier selection, upgrade modal              |
+| **Admin Dashboard**   | ✅ Complete | Password-protected, user stats             |
+| **Pricing Page**      | ✅ Complete | Plan comparison, feature list              |
+| **Loading States**    | ✅ Complete | Spinners, progress indicators              |
+| **Error Handling**    | ✅ Complete | User-friendly messages                     |
+| **Responsive Design** | ✅ Complete | Mobile, tablet, desktop                    |
 
 ### Backend (Next.js API Routes)
 
-| Endpoint | Status | Purpose |
-|----------|--------|---------|
-| `POST /api/auth/signup` | ✅ Complete | User registration |
-| `POST /api/auth/login` | ✅ Complete | User authentication |
-| `GET /api/auth/me` | ✅ Complete | Current user info |
-| `POST /api/auth/me` | ✅ Complete | Logout (clear cookie) |
-| `POST /api/generate` | ✅ Complete | Website generation |
-| `GET /api/usage` | ✅ Complete | Usage tracking |
-| `POST /api/upgrade` | ✅ Complete | Tier upgrade |
-| `POST /api/payment/initiate` | ✅ Complete | Payment start |
-| `POST /api/payment/approve` | ✅ Complete | Payment completion |
-| `GET /api/admin` | ✅ Complete | Admin dashboard |
+| Endpoint                     | Status      | Purpose               |
+| ---------------------------- | ----------- | --------------------- |
+| `POST /api/auth/signup`      | ✅ Complete | User registration     |
+| `POST /api/auth/login`       | ✅ Complete | User authentication   |
+| `GET /api/auth/me`           | ✅ Complete | Current user info     |
+| `POST /api/auth/me`          | ✅ Complete | Logout (clear cookie) |
+| `POST /api/generate`         | ✅ Complete | Website generation    |
+| `GET /api/usage`             | ✅ Complete | Usage tracking        |
+| `POST /api/upgrade`          | ✅ Complete | Tier upgrade          |
+| `POST /api/payment/initiate` | ✅ Complete | Payment start         |
+| `POST /api/payment/approve`  | ✅ Complete | Payment completion    |
+| `GET /api/admin`             | ✅ Complete | Admin dashboard       |
 
 ### Data & Storage
 
-| System | Status | Details |
-|--------|--------|---------|
-| **User Accounts** | ✅ Redis | Persisted in Upstash |
-| **Passwords** | ✅ bcrypt | Hashed, never stored plain |
-| **Sessions** | ✅ JWT | 30-day expiration |
-| **Usage Tracking** | ✅ Redis | Real-time counters |
-| **Payments** | ✅ Redis | Transaction history |
-| **Tier Limits** | ✅ Enforced | Per-user, per-tier |
+| System             | Status      | Details                    |
+| ------------------ | ----------- | -------------------------- |
+| **User Accounts**  | ✅ Redis    | Persisted in Upstash       |
+| **Passwords**      | ✅ bcrypt   | Hashed, never stored plain |
+| **Sessions**       | ✅ JWT      | 30-day expiration          |
+| **Usage Tracking** | ✅ Redis    | Real-time counters         |
+| **Payments**       | ✅ Redis    | Transaction history        |
+| **Tier Limits**    | ✅ Enforced | Per-user, per-tier         |
 
 ---
 
@@ -100,12 +100,12 @@ http://localhost:3001
 
 ### Tier Limits
 
-| Tier | Generations | Cost | Type |
-|------|------------|------|------|
-| Free | 5 total | Free | One-time |
-| Basic | 10/day | $9.99/mo | Daily reset |
-| Standard | 200 total | $29.99/mo | Monthly |
-| Premium | Unlimited | $99.99/mo | Always |
+| Tier     | Generations | Cost      | Type        |
+| -------- | ----------- | --------- | ----------- |
+| Free     | 5 total     | Free      | One-time    |
+| Basic    | 10/day      | $9.99/mo  | Daily reset |
+| Standard | 200 total   | $29.99/mo | Monthly     |
+| Premium  | Unlimited   | $99.99/mo | Always      |
 
 ---
 
@@ -153,7 +153,7 @@ WG/
 ✅ **Secrets** - Environment variables, never in code  
 ✅ **Admin** - Password-protected dashboard  
 ✅ **Validation** - Email, password, input validation  
-✅ **Error Handling** - No sensitive info in errors  
+✅ **Error Handling** - No sensitive info in errors
 
 ---
 
@@ -249,25 +249,27 @@ git push origin main
 
 ## 📊 Performance Metrics
 
-| Metric | Target | Status |
-|--------|--------|--------|
-| Build Time | < 30s | ✅ ~10s |
-| Page Load | < 3s | ✅ ~2s |
-| API Response | < 1s | ✅ ~500ms |
-| Bundle Size | < 5MB | ✅ ~2.5MB |
-| Type Safety | 100% | ✅ No errors |
+| Metric       | Target | Status       |
+| ------------ | ------ | ------------ |
+| Build Time   | < 30s  | ✅ ~10s      |
+| Page Load    | < 3s   | ✅ ~2s       |
+| API Response | < 1s   | ✅ ~500ms    |
+| Bundle Size  | < 5MB  | ✅ ~2.5MB    |
+| Type Safety  | 100%   | ✅ No errors |
 
 ---
 
 ## 🎯 Next Steps
 
 ### Immediate (Deploy)
+
 1. [ ] Set all environment variables in Vercel
 2. [ ] Deploy to production
 3. [ ] Verify live functionality
 4. [ ] Monitor error logs
 
 ### Short-term (Enhancement)
+
 1. [ ] Add email verification
 2. [ ] Implement OAuth (Google/GitHub)
 3. [ ] Add analytics tracking
@@ -275,6 +277,7 @@ git push origin main
 5. [ ] Add API documentation
 
 ### Long-term (Growth)
+
 1. [ ] Custom domain support
 2. [ ] White-label option
 3. [ ] Advanced templates
@@ -285,29 +288,32 @@ git push origin main
 
 ## 🐛 Known Limitations
 
-| Issue | Status | Workaround |
-|-------|--------|-----------|
-| Port 3000 in use | Minor | Auto-falls back to 3001 |
-| Redis offline | Major | Use production Redis |
-| OpenAI rate limit | Info | Upgrade API quota |
-| Data between deploys | None | Using Redis solves this |
+| Issue                | Status | Workaround              |
+| -------------------- | ------ | ----------------------- |
+| Port 3000 in use     | Minor  | Auto-falls back to 3001 |
+| Redis offline        | Major  | Use production Redis    |
+| OpenAI rate limit    | Info   | Upgrade API quota       |
+| Data between deploys | None   | Using Redis solves this |
 
 ---
 
 ## 📞 Support Resources
 
 ### Documentation
+
 - **README.md** - Start here
 - **QUICK_START.md** - For developers
 - **PRODUCTION_STATUS.md** - For production
 - **TESTING_GUIDE.md** - For QA
 
 ### Tools
+
 - **Vercel Logs**: `vercel logs --follow`
 - **Redis Console**: https://console.upstash.com
 - **OpenAI Dashboard**: https://platform.openai.com
 
 ### Debugging
+
 1. Check browser console (F12)
 2. Review Vercel error logs
 3. Verify environment variables
@@ -319,6 +325,7 @@ git push origin main
 ## 📋 File Manifest
 
 ### Configuration Files
+
 - `package.json` - Dependencies
 - `tsconfig.json` - TypeScript config
 - `next.config.mjs` - Next.js config
@@ -329,6 +336,7 @@ git push origin main
 - `.gitignore` - Git exclusions
 
 ### Source Code
+
 - `app/page.tsx` - Home page (463 lines)
 - `app/layout.tsx` - Root layout
 - `app/admin/route.ts` - Admin dashboard
@@ -343,6 +351,7 @@ git push origin main
 - `lib/payments.ts` - Payment tracking (73 lines)
 
 ### Documentation
+
 - `README.md` - Project overview
 - `QUICK_START.md` - Setup guide
 - `PRODUCTION_STATUS.md` - Production details
@@ -394,7 +403,7 @@ git push origin main
 
 ## 🎉 You're Ready!
 
-Doltsite is a **production-ready, feature-complete AI website generator**. 
+Doltsite is a **production-ready, feature-complete AI website generator**.
 
 **Next action**: Deploy to Vercel following `DEPLOYMENT_GUIDE.md`
 
