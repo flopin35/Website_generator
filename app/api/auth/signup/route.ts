@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
     if (password.length < 6) {
       return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 })
     }
-    if (findAccountByEmail(email)) {
+    const existing = await findAccountByEmail(email)
+    if (existing) {
       return NextResponse.json({ error: 'An account with this email already exists' }, { status: 409 })
     }
 
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString(),
     }
 
-    saveAccount(account)
+    await saveAccount(account)
     const token = await createToken(id)
 
     const response = NextResponse.json({

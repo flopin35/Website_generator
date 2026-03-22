@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   const accountId = await verifyToken(token)
   if (!accountId) return NextResponse.json({ account: null })
 
-  const account = findAccountById(accountId)
+  const account = await findAccountById(accountId)
   if (!account) return NextResponse.json({ account: null })
 
   const expired = isAccountExpired(account)

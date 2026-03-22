@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getPayments, savePayment, PLAN_CONFIG } from '@/lib/payments'
-import { getUser, saveUser } from '@/lib/users'
-import { findAccountByEmail, getAccountsStore, saveAccount, todayStr } from '@/lib/accounts'
+import { getAllPayments, savePayment, updatePayment, PLAN_CONFIG } from '@/lib/payments'
+import { findAccountByEmail, saveAccount, todayStr } from '@/lib/accounts'
 import type { Tier } from '@/lib/users'
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'doltsite-admin-2025'
@@ -13,10 +12,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const store = getPayments()
-  const list = Object.values(store).sort(
-    (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-  )
+  const list = await getAllPayments()
   return NextResponse.json({ payments: list })
 }
 
@@ -34,55 +30,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'paymentId and action (approve|reject) required' }, { status: 400 })
     }
 
-    const store = getPayments()
-    const payment = store[paymentId]
+    const allPayments = await getAllPayments()
+    const payment = allPayments.find(p => p.id === paymentId)
     if (!payment) {
       return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
     }
 
     if (action === 'approve') {
-      payment.status = 'approved'
-      if (note) payment.note = note
-      savePayment(payment)
+      await updatePayment(paymentId, { status: 'approved', ...(note ? { note } : {}) })
 
       const days = PLAN_CONFIG[payment.plan].days
       const expires = new Date()
       expires.setDate(expires.getDate() + days)
       const expiresStr = expires.toISOString()
 
-      // Upgrade session-based user
-      const user = getUser(payment.sessionId)
-      user.tier = payment.plan
-      user.usage = 0
-      user.dailyUsage = 0
-      user.expires = expiresStr
-      saveUser(payment.sessionId, user)
-
-      // Also upgrade the linked account if one exists
+      // Upgrade the linked account if one exists
       if (payment.accountEmail) {
-        const account = findAccountByEmail(payment.accountEmail)
+        const account = await findAccountByEmail(payment.accountEmail)
         if (account) {
           account.tier = payment.plan as Tier
           account.usage = 0
           account.dailyUsage = 0
           account.lastReset = todayStr()
           account.expires = expiresStr
-          saveAccount(account)
+          await saveAccount(account)
         }
       }
 
       return NextResponse.json({
         success: true,
-        message: `Payment approved. User upgraded to ${payment.plan}.`,
-        user: { tier: user.tier, expires: user.expires },
+        message: `Payment approved. Account upgraded to ${payment.plan}.`,
+        expires: expiresStr,
       })
     } else {
-      payment.status = 'rejected'
-      if (note) payment.note = note
-      savePayment(payment)   // ← persist payment status
+      await updatePayment(paymentId, { status: 'rejected', ...(note ? { note } : {}) })
       return NextResponse.json({ success: true, message: 'Payment rejected.' })
     }
-  } catch {
+  } catch (e) {
+    console.error('Payment approve error:', e)
     return NextResponse.json({ error: 'Failed to process payment' }, { status: 500 })
   }
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getPayments, savePayment, PLAN_CONFIG, type Payment } from '@/lib/payments'
+import { getAllPayments, savePayment, PLAN_CONFIG, type Payment } from '@/lib/payments'
 import { verifyToken, findAccountById } from '@/lib/accounts'
 
 function generateRef() {
@@ -19,19 +19,19 @@ export async function POST(request: NextRequest) {
     }
 
     const config = PLAN_CONFIG[plan as keyof typeof PLAN_CONFIG]
-    const store = getPayments()
 
     // Resolve account email if user is logged in
     const token = request.cookies.get('doltsite-token')?.value
     let accountEmail: string | undefined
     if (token) {
       const accountId = await verifyToken(token)
-      const account = accountId ? findAccountById(accountId) : null
+      const account = accountId ? await findAccountById(accountId) : null
       if (account) accountEmail = account.email
     }
 
     // Return existing pending payment if one exists
-    const existing = Object.values(store).find(
+    const allPayments = await getAllPayments()
+    const existing = allPayments.find(
       (p: Payment) => p.sessionId === sessionId && p.status === 'pending'
     )
     if (existing) {
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       submittedAt: new Date().toISOString(),
       status: 'pending',
     }
-    savePayment(newPayment)
+    await savePayment(newPayment)
 
     return NextResponse.json({
       referenceCode,
@@ -80,8 +80,8 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'referenceCode and momoNumber are required' }, { status: 400 })
     }
 
-    const store = getPayments()
-    const payment = Object.values(store).find((p: Payment) => p.referenceCode === referenceCode)
+    const allPayments = await getAllPayments()
+    const payment = allPayments.find((p: Payment) => p.referenceCode === referenceCode)
     if (!payment) {
       return NextResponse.json({ error: 'Reference code not found. Please check and try again.' }, { status: 404 })
     }
@@ -91,7 +91,7 @@ export async function PATCH(request: NextRequest) {
 
     payment.momoNumber = momoNumber
     payment.submittedAt = new Date().toISOString()
-    savePayment(payment)  // ← persist the MoMo number to disk
+    await savePayment(payment)
 
     return NextResponse.json({ success: true, message: 'Payment proof submitted! You will be activated shortly.' })
   } catch {

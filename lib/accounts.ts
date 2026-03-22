@@ -1,11 +1,10 @@
-// Account store — persisted to .data/accounts.json
+// Account store — persisted to Upstash Redis
 // Passwords are bcrypt-hashed. JWTs are signed with JWT_SECRET.
 
-import fs from 'fs'
-import path from 'path'
 import bcrypt from 'bcryptjs'
 import { SignJWT, jwtVerify } from 'jose'
 import type { Tier } from './users'
+import { redis, KEYS } from './redis'
 
 export type Account = {
   id: string
@@ -20,61 +19,61 @@ export type Account = {
   createdAt: string
 }
 
-const DATA_DIR = path.join(process.cwd(), '.data')
-const ACCOUNTS_FILE = path.join(DATA_DIR, 'accounts.json')
-
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'doltsite-jwt-secret-change-in-production-2025'
 )
 const JWT_EXPIRES = '30d'
 
-// ── Persistence ──────────────────────────────────────────────────────────────
+// ── Persistence (Redis) ───────────────────────────────────────────────────────
 
-function ensureDataDir() {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true })
-}
-
-function loadAccounts(): Record<string, Account> {
+export async function saveAccount(account: Account): Promise<void> {
   try {
-    ensureDataDir()
-    if (!fs.existsSync(ACCOUNTS_FILE)) return {}
-    return JSON.parse(fs.readFileSync(ACCOUNTS_FILE, 'utf-8'))
-  } catch {
-    return {}
-  }
-}
-
-function saveAccounts(data: Record<string, Account>) {
-  try {
-    ensureDataDir()
-    fs.writeFileSync(ACCOUNTS_FILE, JSON.stringify(data, null, 2), 'utf-8')
+    await redis.set(KEYS.account(account.id), JSON.stringify(account))
+    await redis.set(KEYS.accountEmail(account.email), account.id)
   } catch (e) {
-    console.error('Failed to save accounts:', e)
+    console.error('Failed to save account to Redis:', e)
   }
 }
 
-let _accounts: Record<string, Account> | null = null
-
-export function getAccountsStore(): Record<string, Account> {
-  if (!_accounts) _accounts = loadAccounts()
-  return _accounts
+export async function findAccountByEmail(email: string): Promise<Account | null> {
+  try {
+    const id = await redis.get<string>(KEYS.accountEmail(email.toLowerCase()))
+    if (!id) return null
+    return findAccountById(id)
+  } catch {
+    return null
+  }
 }
 
-export function saveAccount(account: Account) {
-  const store = getAccountsStore()
-  store[account.id] = account
-  saveAccounts(store)
+export async function findAccountById(id: string): Promise<Account | null> {
+  try {
+    const raw = await redis.get<string>(KEYS.account(id))
+    if (!raw) return null
+    return typeof raw === 'string' ? JSON.parse(raw) : raw as Account
+  } catch {
+    return null
+  }
 }
 
-// ── Lookup helpers ────────────────────────────────────────────────────────────
+export async function getAllAccounts(): Promise<Account[]> {
+  try {
+    // Scan for all account keys
+    const keys: string[] = []
+    let cursor = 0
+    do {
+      const [nextCursor, found] = await redis.scan(cursor, { match: 'account:acc-*', count: 100 })
+      cursor = Number(nextCursor)
+      keys.push(...found)
+    } while (cursor !== 0)
 
-export function findAccountByEmail(email: string): Account | null {
-  const store = getAccountsStore()
-  return Object.values(store).find(a => a.email.toLowerCase() === email.toLowerCase()) ?? null
-}
-
-export function findAccountById(id: string): Account | null {
-  return getAccountsStore()[id] ?? null
+    if (keys.length === 0) return []
+    const raws = await redis.mget<string[]>(...keys)
+    return raws
+      .filter(Boolean)
+      .map(r => typeof r === 'string' ? JSON.parse(r) : r as Account)
+  } catch {
+    return []
+  }
 }
 
 // ── Auth helpers ──────────────────────────────────────────────────────────────
@@ -108,7 +107,7 @@ export function todayStr() {
   return new Date().toISOString().slice(0, 10)
 }
 
-// ── Usage/limit helpers (mirror lib/users.ts but for accounts) ───────────────
+// ── Usage/limit helpers ───────────────────────────────────────────────────────
 
 export const ACCOUNT_LIMITS: Record<Tier, number> = {
   free: 2,
@@ -125,11 +124,9 @@ export function isAccountExpired(account: Account): boolean {
 export function canAccountGenerate(account: Account): boolean {
   if (isAccountExpired(account)) return false
   if (account.tier === 'basic') {
-    // reset daily counter if it's a new day
     if (account.lastReset !== todayStr()) {
       account.dailyUsage = 0
       account.lastReset = todayStr()
-      saveAccount(account)
     }
     return account.dailyUsage < ACCOUNT_LIMITS.basic
   }
@@ -137,7 +134,7 @@ export function canAccountGenerate(account: Account): boolean {
   return account.usage < limit
 }
 
-export function incrementAccountUsage(account: Account): Account {
+export async function incrementAccountUsage(account: Account): Promise<Account> {
   if (account.tier === 'basic') {
     if (account.lastReset !== todayStr()) {
       account.dailyUsage = 0
@@ -146,7 +143,7 @@ export function incrementAccountUsage(account: Account): Account {
     account.dailyUsage += 1
   }
   account.usage += 1
-  saveAccount(account)
+  await saveAccount(account)
   return account
 }
 
