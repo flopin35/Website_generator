@@ -1,39 +1,36 @@
-'use client'
-
-import { Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import Markdown from 'react-markdown'
+import { readFileSync } from 'fs'
+import { join } from 'path'
 
-function DocViewContent() {
-  const searchParams = useSearchParams()
-  const file = searchParams?.get('file') || 'README.md'
-  const [content, setContent] = useState<string>('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string>('')
+interface SearchParamsType {
+  file?: string
+}
 
-  useEffect(() => {
-    const fetchDoc = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch(`/${file}`)
-        if (!response.ok) {
-          setError(`Failed to load ${file}`)
-          return
-        }
-        const text = await response.text()
-        setContent(text)
-      } catch (err) {
-        setError(`Error loading documentation: ${err instanceof Error ? err.message : 'Unknown error'}`)
-      } finally {
-        setLoading(false)
-      }
+export default async function DocViewPage(props: { 
+  searchParams: Promise<SearchParamsType> 
+}) {
+  const searchParams = await props.searchParams
+  const file = searchParams?.file || 'README.md'
+  
+  let content = ''
+  let error = ''
+  
+  try {
+    // Read file from public directory
+    const publicDir = join(process.cwd(), 'public')
+    const filePath = join(publicDir, file)
+    
+    // Simple security check - don't allow path traversal
+    if (!filePath.startsWith(publicDir)) {
+      error = 'Invalid file path'
+    } else {
+      content = readFileSync(filePath, 'utf-8')
     }
-
-    fetchDoc()
-  }, [file])
+  } catch (e) {
+    error = `Failed to load ${file}`
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -50,20 +47,14 @@ function DocViewContent() {
 
       {/* Main Content */}
       <main className="container mx-auto max-w-4xl px-4 py-8">
-        {loading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        )}
-
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
             <strong>Error:</strong> {error}
           </div>
         )}
 
-        {content && !loading && (
-          <div className="bg-white rounded-lg border border-slate-200 p-8">
+        {content && !error && (
+          <div className="bg-white rounded-lg border border-slate-200 p-8 prose prose-sm max-w-none">
             <Markdown
               components={{
                 h1: ({children}) => <h1 className="text-3xl font-bold mb-4 mt-6 text-slate-900">{children}</h1>,
@@ -96,13 +87,5 @@ function DocViewContent() {
         </div>
       </footer>
     </div>
-  )
-}
-
-export default function DocViewPage() {
-  return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>}>
-      <DocViewContent />
-    </Suspense>
   )
 }
