@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { findAccountById, findAccountByEmail, saveAccount, todayStr } from '@/lib/accounts'
-import type { Tier } from '@/lib/users'
+import { findAccountById, findAccountByEmail, saveAccount, todayStr, type Tier } from '@/lib/accounts'
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'doltsite-admin-2025'
 

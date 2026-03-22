@@ -3,8 +3,9 @@
 
 import bcrypt from 'bcryptjs'
 import { SignJWT, jwtVerify } from 'jose'
-import type { Tier } from './users'
-import { redis, KEYS } from './redis'
+import { getRedis, KEYS } from './redis'
+
+export type Tier = 'free' | 'basic' | 'standard' | 'premium'
 
 export type Account = {
   id: string
@@ -28,8 +29,9 @@ const JWT_EXPIRES = '30d'
 
 export async function saveAccount(account: Account): Promise<void> {
   try {
-    await redis.set(KEYS.account(account.id), JSON.stringify(account))
-    await redis.set(KEYS.accountEmail(account.email), account.id)
+    const r = getRedis()
+    await r.set(KEYS.account(account.id), JSON.stringify(account))
+    await r.set(KEYS.accountEmail(account.email), account.id)
   } catch (e) {
     console.error('Failed to save account to Redis:', e)
   }
@@ -37,7 +39,8 @@ export async function saveAccount(account: Account): Promise<void> {
 
 export async function findAccountByEmail(email: string): Promise<Account | null> {
   try {
-    const id = await redis.get<string>(KEYS.accountEmail(email.toLowerCase()))
+    const r = getRedis()
+    const id = await r.get(KEYS.accountEmail(email.toLowerCase())) as string | null
     if (!id) return null
     return findAccountById(id)
   } catch {
@@ -47,7 +50,8 @@ export async function findAccountByEmail(email: string): Promise<Account | null>
 
 export async function findAccountById(id: string): Promise<Account | null> {
   try {
-    const raw = await redis.get<string>(KEYS.account(id))
+    const r = getRedis()
+    const raw = await r.get(KEYS.account(id))
     if (!raw) return null
     return typeof raw === 'string' ? JSON.parse(raw) : raw as Account
   } catch {
@@ -57,18 +61,20 @@ export async function findAccountById(id: string): Promise<Account | null> {
 
 export async function getAllAccounts(): Promise<Account[]> {
   try {
-    // Scan for all account keys
+    const r = getRedis()
     const keys: string[] = []
     let cursor = 0
     do {
-      const [nextCursor, found] = await redis.scan(cursor, { match: 'account:acc-*', count: 100 })
+      const [nextCursor, found] = await r.scan(cursor, { match: 'account:acc-*', count: 100 })
       cursor = Number(nextCursor)
-      keys.push(...found)
+      for (const k of found) {
+        if (typeof k === 'string') keys.push(k)
+      }
     } while (cursor !== 0)
 
     if (keys.length === 0) return []
-    const raws = await redis.mget<string[]>(...keys)
-    return raws
+    const raws = await r.mget(...keys)
+    return (raws as unknown[])
       .filter(Boolean)
       .map(r => typeof r === 'string' ? JSON.parse(r) : r as Account)
   } catch {

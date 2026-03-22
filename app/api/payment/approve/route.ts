@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllPayments, savePayment, updatePayment, PLAN_CONFIG } from '@/lib/payments'
-import { findAccountByEmail, saveAccount, todayStr } from '@/lib/accounts'
-import type { Tier } from '@/lib/users'
+import { getAllPayments, updatePayment, PLAN_CONFIG } from '@/lib/payments'
+import { findAccountByEmail, saveAccount, todayStr, type Tier } from '@/lib/accounts'
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'doltsite-admin-2025'
 

@@ -1,20 +1,30 @@
-// Shared Redis client (Upstash)
+// Shared Redis client (Upstash) — lazy initialization
 // Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in .env.local / Vercel env vars
 
 import { Redis } from '@upstash/redis'
 
-if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-  console.warn(
-    '[redis] UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN not set — ' +
-    'falling back to in-memory store (data will not persist across restarts)'
-  )
-}
+let _redis: Redis | null = null
 
-// Redis instance — automatically uses env vars
-export const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL ?? 'http://localhost',
-  token: process.env.UPSTASH_REDIS_REST_TOKEN ?? 'local',
-})
+export function getRedis(): Redis {
+  if (_redis) return _redis
+
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+
+  if (!url || !token) {
+    console.warn(
+      '[redis] UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN not set — ' +
+      'data will NOT persist across restarts. Add these to Vercel env vars.'
+    )
+  }
+
+  _redis = new Redis({
+    url: url ?? 'http://localhost',
+    token: token ?? 'no-token',
+  })
+
+  return _redis
+}
 
 export const KEYS = {
   account: (id: string) => `account:${id}`,

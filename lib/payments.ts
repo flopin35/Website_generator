@@ -1,6 +1,6 @@
 // Payments store — persisted to Upstash Redis
 
-import { redis, KEYS } from './redis'
+import { getRedis, KEYS } from './redis'
 
 export type PaymentStatus = 'pending' | 'approved' | 'rejected'
 
@@ -27,9 +27,9 @@ export const PLAN_CONFIG = {
 
 export async function savePayment(payment: Payment): Promise<void> {
   try {
-    await redis.set(KEYS.payment(payment.id), JSON.stringify(payment))
-    // Add to sorted set by timestamp for ordered listing
-    await redis.zadd(KEYS.allPayments(), {
+    const r = getRedis()
+    await r.set(KEYS.payment(payment.id), JSON.stringify(payment))
+    await r.zadd(KEYS.allPayments(), {
       score: new Date(payment.submittedAt).getTime(),
       member: payment.id,
     })
@@ -40,7 +40,8 @@ export async function savePayment(payment: Payment): Promise<void> {
 
 export async function getPayment(id: string): Promise<Payment | null> {
   try {
-    const raw = await redis.get<string>(KEYS.payment(id))
+    const r = getRedis()
+    const raw = await r.get(KEYS.payment(id))
     if (!raw) return null
     return typeof raw === 'string' ? JSON.parse(raw) : raw as Payment
   } catch {
@@ -50,11 +51,11 @@ export async function getPayment(id: string): Promise<Payment | null> {
 
 export async function getAllPayments(): Promise<Payment[]> {
   try {
-    // Get all payment IDs ordered by time descending
-    const ids = await redis.zrange(KEYS.allPayments(), 0, -1, { rev: true })
+    const r = getRedis()
+    const ids = await r.zrange(KEYS.allPayments(), 0, -1, { rev: true })
     if (!ids || ids.length === 0) return []
-    const raws = await redis.mget<string[]>(...ids.map((id) => KEYS.payment(id as string)))
-    return raws
+    const raws = await r.mget(...ids.map((id) => KEYS.payment(id as string)))
+    return (raws as unknown[])
       .filter(Boolean)
       .map(r => typeof r === 'string' ? JSON.parse(r) : r as Payment)
   } catch {
