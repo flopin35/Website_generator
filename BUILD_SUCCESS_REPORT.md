@@ -25,6 +25,7 @@ The **Doltsite AI Website Generator** has been successfully built and is now **p
 ## 📊 Build Metrics
 
 ### Routes Summary
+
 ```
 Total Routes: 15
 ├─ Static Pages (○): 4
@@ -47,6 +48,7 @@ Total Routes: 15
 ```
 
 ### Build Output
+
 ```
 Size Metrics:
 - Home Page: 11.2 kB (98.5 kB First Load JS)
@@ -65,6 +67,7 @@ JavaScript Bundle:
 ## 🔧 Technical Implementation
 
 ### Architecture
+
 - **Framework:** Next.js 14.2.35 (App Router)
 - **Language:** TypeScript
 - **Database:** Upstash Redis (Vercel-compatible)
@@ -75,36 +78,42 @@ JavaScript Bundle:
 ### Key Features
 
 #### 1. **User Accounts**
+
 - Secure JWT-based authentication
 - User registration and login endpoints
 - Account state managed via Redis
 - Session management with secure token handling
 
 #### 2. **Tier System**
+
 - **Free Tier:** 5 generations/month
 - **Basic Tier:** 50 generations/month ($5/month)
 - **Pro Tier:** 500 generations/month ($19/month)
 - Tier-based generation limits enforced
 
 #### 3. **Payment Integration**
+
 - Payment initiation flow
 - Approval workflow
 - Upgrade tracking
 - Usage-based limits
 
 #### 4. **Site Generation**
+
 - AI-powered website generation
 - Rate limiting per tier
 - Usage tracking and analytics
 - HTML/CSS output generation
 
 #### 5. **Admin Dashboard**
+
 - Secure password-protected access (`ADMIN_PASSWORD` env var)
 - User management overview
 - System statistics
 - Real-time usage monitoring
 
 #### 6. **Documentation System**
+
 - Markdown-based documentation
 - Server-side file reading
 - Security: Path traversal prevention
@@ -130,6 +139,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3000 (local)
 ```
 
 ### Local Development
+
 1. Create `.env.local` in the project root
 2. Add all required environment variables
 3. Run `npm install` (if needed)
@@ -142,6 +152,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3000 (local)
 ## ✅ Verification Results
 
 ### Local Build Test
+
 ```
 Command: npm run build
 Result: ✅ SUCCESS
@@ -151,6 +162,7 @@ Warnings: 0
 ```
 
 ### Production Server Test
+
 ```
 Command: npm run start
 Result: ✅ Running on localhost:3000
@@ -159,6 +171,7 @@ Response: Complete HTML document received
 ```
 
 ### Endpoints Verified
+
 - ✅ Homepage renders correctly
 - ✅ Admin dashboard accessible with password
 - ✅ Documentation pages load
@@ -191,6 +204,7 @@ Response: Complete HTML document received
 ## 🚢 Deployment Ready
 
 ### For Vercel Deployment
+
 1. Connect GitHub repository to Vercel
 2. Add environment variables in Vercel dashboard:
    - `UPSTASH_REDIS_REST_URL`
@@ -200,6 +214,7 @@ Response: Complete HTML document received
 4. Framework: Next.js (auto-detected)
 
 ### For Docker Deployment
+
 ```dockerfile
 FROM node:18-alpine
 WORKDIR /app
@@ -215,6 +230,7 @@ CMD ["npm", "run", "start"]
 ## 📝 Git Status
 
 All changes have been committed:
+
 ```
 ✅ 15 files changed
 ✅ Code fixes validated
@@ -227,12 +243,14 @@ All changes have been committed:
 ## 🎯 Next Steps
 
 ### Immediate Actions
+
 1. **Deploy to Vercel:** Push to main branch and redeploy
 2. **Configure Environment:** Set all required env vars in Vercel dashboard
 3. **Test Production:** Verify all endpoints work in Vercel environment
 4. **Monitor Logs:** Check Vercel logs for any runtime errors
 
 ### Post-Deployment
+
 1. Test user registration flow
 2. Test payment initiation
 3. Monitor Redis usage
@@ -240,6 +258,7 @@ All changes have been committed:
 5. Configure domain/DNS if custom domain
 
 ### Future Improvements
+
 1. Add email notifications
 2. Implement payment webhooks
 3. Add advanced analytics dashboard
@@ -251,22 +270,26 @@ All changes have been committed:
 ## 📞 Troubleshooting
 
 ### Build Fails Locally
+
 - Clear `.next` folder: `rm -r .next`
 - Clear `node_modules`: `rm -r node_modules`
 - Reinstall: `npm install`
 - Rebuild: `npm run build`
 
 ### Redis Connection Issues
+
 - Verify `UPSTASH_REDIS_REST_URL` and token are correct
 - Check Upstash dashboard for account status
 - Ensure token has appropriate permissions
 
 ### Admin Dashboard Not Accessible
+
 - Verify `ADMIN_PASSWORD` env var is set
 - Check browser console for errors
 - Clear browser cache and retry
 
 ### 404 on `/docs/view`
+
 - Ensure markdown files exist in `public/` directory
 - Check file parameter: `?file=filename.md`
 - Verify file extension is `.md`
