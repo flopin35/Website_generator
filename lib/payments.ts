@@ -19,7 +19,7 @@ export type Payment = {
 
 export const PLAN_CONFIG = {
   basic:    { amount: '20 GHS',  days: 30, label: 'Basic – 20 GHS/month' },
-  standard: { amount: '100 GHS', days: 30, label: 'Standard – 100 GHS/month' },
+  standard: { amount: '50 GHS', days: 30, label: 'Standard – 50 GHS/month' },
   premium:  { amount: '250 GHS', days: 30, label: 'Premium – 250 GHS/month' },
 } as const
 

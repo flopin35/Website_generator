@@ -116,10 +116,10 @@ export function todayStr() {
 // ── Usage/limit helpers ───────────────────────────────────────────────────────
 
 export const ACCOUNT_LIMITS: Record<Tier, number> = {
-  free: 5,
-  basic: 10,
-  standard: 200,
-  premium: Infinity,
+  free: 3,        // 3 gens per day (free tier)
+  basic: 10,      // 10 gens per day (20 GHS/month)
+  standard: 200,  // 200 gens per month (50 GHS/month)
+  premium: Infinity, // Unlimited (250 GHS/month)
 }
 
 export function isAccountExpired(account: Account): boolean {

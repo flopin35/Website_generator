@@ -19,7 +19,7 @@
 ### Core Features
 
 1. **User Accounts** - Registration, login, secure JWT sessions
-2. **Subscription Tiers** - Free (5 gens/mo), Basic ($5/mo, 50 gens), Pro ($19/mo, 500 gens)
+2. **Subscription Tiers** - Free (3 gens/day), Basic (20 GHS, 10 gens/day), Standard (50 GHS, 200 gens/month), Premium (250 GHS, unlimited)
 3. **AI Site Generation** - OpenAI-powered website creation
 4. **Admin Dashboard** - Password-protected user management
 5. **Usage Tracking** - Real-time generation limits & analytics

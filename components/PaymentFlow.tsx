@@ -28,7 +28,7 @@ const PLANS = [
     id: 'standard',
     icon: <Star className="w-5 h-5" />,
     name: 'Standard',
-    price: '100 GHS',
+    price: '50 GHS',
     period: '/ month',
     color: 'from-purple-500 to-pink-500',
     border: 'border-purple-500/60',

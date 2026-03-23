@@ -412,9 +412,9 @@ export default function Home() {
               <div className="mt-6 p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl">
                 <p className="text-xs font-semibold text-purple-300 mb-2">🚀 Unlock Full Access</p>
                 <div className="space-y-1 text-xs text-slate-400">
-                  <div className="flex justify-between"><span>Basic</span><span className="text-white font-medium">20 GHS/month · 3/day</span></div>
-                  <div className="flex justify-between"><span>Standard</span><span className="text-white font-medium">100 GHS/month</span></div>
-                  <div className="flex justify-between"><span>Premium</span><span className="text-white font-medium">250 GHS/month</span></div>
+                  <div className="flex justify-between"><span>Basic</span><span className="text-white font-medium">20 GHS/month · 10/day</span></div>
+                  <div className="flex justify-between"><span>Standard</span><span className="text-white font-medium">50 GHS/month · 200/month</span></div>
+                  <div className="flex justify-between"><span>Premium</span><span className="text-white font-medium">250 GHS/month · Unlimited</span></div>
                 </div>
                 <button
                   onClick={() => setShowPricing(true)}
