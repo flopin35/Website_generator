@@ -29,44 +29,23 @@ const REQUEST_ID_EXPIRY = 60000 // 1 minute (for idempotency)
 
 /**
  * STAGE 1: Acquire lock (prevent concurrent generation)
- * Returns false if user is already generating
+ * For MVP, use simple in-memory tracking instead of DB lock
  */
+const generatingUsers = new Set<string>()
+
 async function acquireLock(accountId: string): Promise<boolean> {
-  try {
-    const account = await prisma.account.findUnique({
-      where: { id: accountId },
-      select: { isGenerating: true },
-    })
-
-    if (account?.isGenerating) {
-      return false // Already generating
-    }
-
-    // Set lock
-    await prisma.account.update({
-      where: { id: accountId },
-      data: { isGenerating: true },
-    })
-
-    return true
-  } catch (e) {
-    console.error('Failed to acquire lock:', e)
-    return false
+  if (generatingUsers.has(accountId)) {
+    return false // Already generating
   }
+  generatingUsers.add(accountId)
+  return true
 }
 
 /**
  * STAGE 2: Release lock (always call, even on error)
  */
 async function releaseLock(accountId: string): Promise<void> {
-  try {
-    await prisma.account.update({
-      where: { id: accountId },
-      data: { isGenerating: false },
-    })
-  } catch (e) {
-    console.error('Failed to release lock:', e)
-  }
+  generatingUsers.delete(accountId)
 }
 
 /**
