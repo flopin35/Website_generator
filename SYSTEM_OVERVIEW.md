@@ -3,6 +3,7 @@
 ## The Problem We Solved
 
 ### What You Had (Broken ❌)
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  WEBSITE GENERATOR (Vulnerable)                         │
@@ -18,6 +19,7 @@
 ```
 
 ### What You Have Now (Solid ✅)
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  WEBSITE GENERATOR (Production-Grade)                   │
@@ -145,8 +147,8 @@ USER CLICKS "GENERATE"
         ↓
   ═════════════════════════════════════════════════════
     generateWebsiteControlled(
-      accountId, 
-      prompt, 
+      accountId,
+      prompt,
       generatorFn,
       requestId
     )
@@ -225,6 +227,7 @@ USER CLICKS "GENERATE"
 ## What's Protected
 
 ### Attack: Spam Clicking (5 clicks in 1 second)
+
 ```
 User's Browser              Generation Service         Database
 ────────────────────────────────────────────────────────────────
@@ -246,6 +249,7 @@ RESULT: Only 1 generation, only 1 credit spent ✅
 ```
 
 ### Attack: Two Tabs, Same User
+
 ```
 Tab A                       Tab B
 ─────────────────────────────────────────
@@ -264,6 +268,7 @@ RESULT: Only Tab A succeeds ✅
 ```
 
 ### Attack: Network Failure
+
 ```
 Generate Request
   ↓
@@ -288,6 +293,7 @@ RESULT: Only 1 generation, no lost data ✅
 ```
 
 ### Attack: Frontend Cheating
+
 ```
 User's Browser               Server
 ──────────────────────────────────────
@@ -345,7 +351,7 @@ FREE TIER
 ├─ Reset: Every 24h
 └─ Example: Fresh at midnight, can generate 3, limit resets
 
-BASIC TIER  
+BASIC TIER
 ├─ Limit: 10/day
 ├─ Price: 20 GHS/month
 ├─ Reset: Every 24h
@@ -433,6 +439,7 @@ Project Root
 ## To Deploy
 
 ### Step 1: Get Database
+
 ```bash
 # Go to https://supabase.com or https://neon.tech
 # Create project
@@ -440,6 +447,7 @@ Project Root
 ```
 
 ### Step 2: Set Environment
+
 ```bash
 # In Vercel dashboard:
 Settings → Environment Variables
@@ -447,18 +455,21 @@ DATABASE_URL=postgresql://...
 ```
 
 ### Step 3: Deploy
+
 ```bash
 git push origin main
 # Vercel auto-deploys
 ```
 
 ### Step 4: Initialize Database
+
 ```bash
 vercel env pull  # Get DATABASE_URL locally
 npx prisma db push  # Apply schema
 ```
 
 ### Step 5: Test
+
 ```bash
 curl https://your-app.vercel.app/api/auth/signup \
   -X POST \
@@ -475,7 +486,7 @@ curl https://your-app.vercel.app/api/auth/signup \
 Architecture:  ✅ DESIGNED
 Database:      ✅ SCHEMA COMPLETE
 API Routes:    ✅ UPDATED
-Pipeline:      ✅ IMPLEMENTED  
+Pipeline:      ✅ IMPLEMENTED
 Security:      ✅ HARDENED
 Error Handle:  ✅ COMPLETE
 Build:         ✅ PASSING

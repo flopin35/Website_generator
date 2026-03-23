@@ -7,14 +7,14 @@
 ## 1️⃣ The One Function You Need
 
 ```typescript
-import { generateWebsiteControlled } from '@/lib/generation-service'
+import { generateWebsiteControlled } from "@/lib/generation-service";
 
 const result = await generateWebsiteControlled(
-  accountId,        // string: user ID from JWT
-  prompt,           // string: what to generate
-  generatorFn,      // function: (prompt) => { html, template }
-  requestId         // string: unique request ID
-)
+  accountId, // string: user ID from JWT
+  prompt, // string: what to generate
+  generatorFn, // function: (prompt) => { html, template }
+  requestId, // string: unique request ID
+);
 ```
 
 ---
@@ -22,49 +22,56 @@ const result = await generateWebsiteControlled(
 ## 2️⃣ Example: Update `/api/generate`
 
 ### Replace This:
+
 ```typescript
 export async function POST(request: NextRequest) {
-  const { description } = await request.json()
-  const html = generateTemplates[detectTemplate(description)](description)
-  return NextResponse.json({ success: true, html })
+  const { description } = await request.json();
+  const html = generateTemplates[detectTemplate(description)](description);
+  return NextResponse.json({ success: true, html });
 }
 ```
 
 ### With This:
+
 ```typescript
-import { generateWebsiteControlled } from '@/lib/generation-service'
-import { verifyJWT } from '@/lib/accounts-db'
+import { generateWebsiteControlled } from "@/lib/generation-service";
+import { verifyJWT } from "@/lib/accounts-db";
 
 export async function POST(request: NextRequest) {
-  const { description } = await request.json()
-  
+  const { description } = await request.json();
+
   // Get account ID from token
-  const token = request.cookies.get('doltsite-token')?.value
-  if (!token) return NextResponse.json({ error: 'Login required' }, { status: 401 })
-  
-  const accountId = await verifyJWT(token)
-  if (!accountId) return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+  const token = request.cookies.get("doltsite-token")?.value;
+  if (!token)
+    return NextResponse.json({ error: "Login required" }, { status: 401 });
+
+  const accountId = await verifyJWT(token);
+  if (!accountId)
+    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
 
   // Use controlled pipeline
   const result = await generateWebsiteControlled(
     accountId,
     description,
     (prompt) => {
-      const template = detectTemplate(prompt)
-      const html = generateTemplates[template](prompt)
-      return { html, template }
-    }
-  )
+      const template = detectTemplate(prompt);
+      const html = generateTemplates[template](prompt);
+      return { html, template };
+    },
+  );
 
   if (!result.success) {
-    return NextResponse.json({ error: result.error, message: result.message }, { status: 403 })
+    return NextResponse.json(
+      { error: result.error, message: result.message },
+      { status: 403 },
+    );
   }
 
   return NextResponse.json({
     success: true,
     html: result.html,
-    template: result.template
-  })
+    template: result.template,
+  });
 }
 ```
 
@@ -79,7 +86,7 @@ That's it! ✅
 ✅ **Timeout Protection** - Kills AI if it takes > 15s  
 ✅ **Atomic Updates** - All-or-nothing database writes  
 ✅ **Error Recovery** - Lock always released  
-✅ **Fair Usage** - Database is single source of truth  
+✅ **Fair Usage** - Database is single source of truth
 
 ---
 
@@ -103,20 +110,21 @@ That's it! ✅
 
 The pipeline returns these errors:
 
-| Error | Meaning | User Should |
-|-------|---------|-------------|
-| `concurrent_request` | Already generating | Wait |
-| `access_denied` | Limit reached | Upgrade |
-| `generation_failed` | AI error | Retry |
-| `save_failed` | DB error | Retry |
+| Error                | Meaning            | User Should |
+| -------------------- | ------------------ | ----------- |
+| `concurrent_request` | Already generating | Wait        |
+| `access_denied`      | Limit reached      | Upgrade     |
+| `generation_failed`  | AI error           | Retry       |
+| `save_failed`        | DB error           | Retry       |
 
 Example:
+
 ```typescript
 if (!result.success) {
-  if (result.error === 'limit_reached') {
-    showUpgradeDialog()
+  if (result.error === "limit_reached") {
+    showUpgradeDialog();
   } else {
-    showError(result.message)
+    showError(result.message);
   }
 }
 ```
@@ -126,6 +134,7 @@ if (!result.success) {
 ## 6️⃣ Testing Locally
 
 ### Test Spam Protection
+
 ```bash
 # Terminal 1
 curl -X POST http://localhost:3000/api/generate \
@@ -142,6 +151,7 @@ curl -X POST http://localhost:3000/api/generate \
 ```
 
 ### Test Limit Enforcement
+
 ```bash
 # In database:
 UPDATE accounts SET generationsUsed = 3, generationsLimit = 3 WHERE tier = 'free';
@@ -163,14 +173,15 @@ Add logging to see it working:
 
 ```typescript
 // In generation-service.ts, add:
-console.log(`[LOCK] Acquired for ${accountId}`)
-console.log(`[VALIDATE] User has ${usage}/${limit} generations`)
-console.log(`[EXECUTE] Starting generation`)
-console.log(`[UPDATE] Saving to database`)
-console.log(`[RELEASE] Lock released`)
+console.log(`[LOCK] Acquired for ${accountId}`);
+console.log(`[VALIDATE] User has ${usage}/${limit} generations`);
+console.log(`[EXECUTE] Starting generation`);
+console.log(`[UPDATE] Saving to database`);
+console.log(`[RELEASE] Lock released`);
 ```
 
 Then in Vercel logs:
+
 ```
 [LOCK] Acquired for user123
 [VALIDATE] User has 2/3 generations
@@ -232,6 +243,7 @@ A: No - database schema already has isGenerating field.
 You have a battle-tested, production-grade generation pipeline.
 
 **All you need to do is:**
+
 1. Import the function
 2. Call it with your generator
 3. Handle the result
@@ -244,14 +256,14 @@ Everything else (locking, validation, error handling, lock release) is automatic
 
 ## Documentation Map
 
-| Doc | Purpose |
-|-----|---------|
-| **QUICK_START.md** | This file - 5 minute implementation |
-| **GENERATION_CONTROL_SYSTEM.md** | Deep dive into the 8-stage pipeline |
-| **GENERATION_INTEGRATION_GUIDE.md** | Full API integration examples |
-| **ARCHITECTURE_COMPLETE_SUMMARY.md** | Complete system overview |
-| **IMPLEMENTATION_STATUS.md** | What was built and what's guaranteed |
-| **SYSTEM_OVERVIEW.md** | Visual diagrams and architecture |
+| Doc                                  | Purpose                              |
+| ------------------------------------ | ------------------------------------ |
+| **QUICK_START.md**                   | This file - 5 minute implementation  |
+| **GENERATION_CONTROL_SYSTEM.md**     | Deep dive into the 8-stage pipeline  |
+| **GENERATION_INTEGRATION_GUIDE.md**  | Full API integration examples        |
+| **ARCHITECTURE_COMPLETE_SUMMARY.md** | Complete system overview             |
+| **IMPLEMENTATION_STATUS.md**         | What was built and what's guaranteed |
+| **SYSTEM_OVERVIEW.md**               | Visual diagrams and architecture     |
 
 ---
 

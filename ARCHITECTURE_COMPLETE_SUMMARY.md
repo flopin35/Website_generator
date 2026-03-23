@@ -9,6 +9,7 @@ This document summarizes the complete secure, production-ready architecture of D
 ## 🏗️ Part 1: Architecture Migration
 
 ### BEFORE (Unreliable ❌)
+
 ```
 User Data → Redis (in-memory, volatile)
 Payments → Redis (lost on restart)
@@ -17,6 +18,7 @@ Authentication → JWT cookies only
 ```
 
 **Problems:**
+
 - ❌ Data loss on restart
 - ❌ Users can manipulate usage
 - ❌ No payment history
@@ -26,6 +28,7 @@ Authentication → JWT cookies only
 ---
 
 ### AFTER (Reliable ✅)
+
 ```
 User Accounts → PostgreSQL (persistent)
 Payments → PostgreSQL (audit trail)
@@ -35,6 +38,7 @@ Authentication → JWT + server validation
 ```
 
 **Benefits:**
+
 - ✅ Data persists across restarts
 - ✅ Server enforces all limits
 - ✅ Complete payment records
@@ -46,28 +50,29 @@ Authentication → JWT + server validation
 ## 🗄️ Part 2: Database Schema
 
 ### Accounts Table
+
 ```sql
 Account {
   id: String (primary key)
   email: String (unique)
   name: String
   passwordHash: String (bcrypt)
-  
+
   -- Subscription
   tier: 'free' | 'basic' | 'standard' | 'premium'
   subscriptionStatus: 'active' | 'expired' | 'cancelled'
   subscriptionExpiresAt: DateTime?
-  
+
   -- Usage limits
   generationsUsed: Int (how many used in period)
   generationsLimit: Int (how many allowed)
   lastResetAt: DateTime (when limit was reset)
-  
+
   -- Concurrency control
   isGenerating: Boolean (prevent spam)
   lastRequestId: String?
   lastRequestTime: DateTime?
-  
+
   -- Activity tracking
   lastLoginAt: DateTime?
   lastGenerationAt: DateTime?
@@ -77,30 +82,32 @@ Account {
 ```
 
 ### Payments Table
+
 ```sql
 Payment {
   id: String (primary key)
   accountId: String (foreign key → Account)
-  
+
   amount: String ("20 GHS", "50 GHS", etc)
   tier: String (which tier this payment upgrades to)
   durationDays: Int (30 days, 60 days, etc)
-  
+
   status: 'pending' | 'completed' | 'failed'
   reference: String? (MoMo transaction ID)
   note: String?
-  
+
   submittedAt: DateTime
   completedAt: DateTime?
 }
 ```
 
 ### Generations Table
+
 ```sql
 Generation {
   id: String (primary key)
   accountId: String (foreign key → Account)
-  
+
   description: String (user's prompt)
   htmlOutput: String (generated website)
   countedTowardLimit: Boolean (did this count towards quota?)
@@ -113,6 +120,7 @@ Generation {
 ## 🔐 Part 3: Authentication & Security
 
 ### Login Flow
+
 1. User submits email + password
 2. Fetch from PostgreSQL (not Redis)
 3. bcrypt.compare(password, passwordHash)
@@ -120,7 +128,9 @@ Generation {
 5. Set httpOnly cookie
 
 ### Request Validation
+
 Every protected endpoint:
+
 ```typescript
 const token = request.cookies.get('doltsite-token')?.value
 const accountId = await verifyJWT(token)
@@ -131,6 +141,7 @@ if (account.subscriptionStatus !== 'active') return 403 Forbidden
 ```
 
 ### Password Security
+
 - Stored: bcrypt hash (10 salt rounds)
 - Never: plaintext, cleartext in logs
 - Verified: constant-time comparison
@@ -140,6 +151,7 @@ if (account.subscriptionStatus !== 'active') return 403 Forbidden
 ## 💰 Part 4: Usage Limits Enforcement
 
 ### Free Tier: 3 generations per day
+
 ```
 - Daily reset: 24 hours from `lastResetAt`
 - Check: if (now - lastResetAt) > 1 day → reset counter
@@ -147,12 +159,14 @@ if (account.subscriptionStatus !== 'active') return 403 Forbidden
 ```
 
 ### Basic Tier: 10 generations per day
+
 ```
 - Same as free but limit is 10
 - Cost: 20 GHS/month
 ```
 
 ### Standard Tier: 200 generations per month
+
 ```
 - Monthly reset: 30 days from `lastResetAt`
 - Check: if (now - lastResetAt) > 30 days → reset counter
@@ -161,6 +175,7 @@ if (account.subscriptionStatus !== 'active') return 403 Forbidden
 ```
 
 ### Premium Tier: Unlimited
+
 ```
 - No counter
 - No reset
@@ -175,11 +190,13 @@ if (account.subscriptionStatus !== 'active') return 403 Forbidden
 ### 8-Stage Flow
 
 **STAGE 1: REQUEST ENTRY**
+
 ```
 POST /api/generate { prompt: "restaurant" }
 ```
 
 **STAGE 2: LOCK (Concurrency Control)**
+
 ```
 Check: if (user.isGenerating) → DENY
 Action: Set user.isGenerating = true
@@ -187,6 +204,7 @@ Purpose: Prevent spam clicks
 ```
 
 **STAGE 3: VALIDATE (Pre-Execution Checks)**
+
 ```
 Checks:
   - Account exists?
@@ -198,6 +216,7 @@ If any check fails → return error, release lock
 ```
 
 **STAGE 4: EXECUTE (Isolated Generation)**
+
 ```
 html = generateWebsite(prompt)
 
@@ -206,6 +225,7 @@ Timeout: 15 seconds max
 ```
 
 **STAGE 5: UPDATE DB (Atomic)**
+
 ```
 Only if generation succeeded:
   - Create generation record
@@ -214,6 +234,7 @@ Only if generation succeeded:
 ```
 
 **STAGE 6: RELEASE (Always)**
+
 ```
 finally {
   Set user.isGenerating = false
@@ -223,6 +244,7 @@ Guaranteed to run even on error
 ```
 
 **STAGE 7: ERROR HANDLING**
+
 ```
 On validation fail → error + release
 On AI fail → error + release
@@ -230,6 +252,7 @@ On DB fail → error + release
 ```
 
 **STAGE 8: RESPONSE**
+
 ```
 Success: { html, template, usage }
 Error: { error, message }
@@ -240,6 +263,7 @@ Error: { error, message }
 ## 🛡️ Part 6: Protection Against Attacks
 
 ### Attack: Spam Clicking (5 clicks in 1 second)
+
 ```
 Click 1: LOCK acquired ✅
 Click 2: isGenerating=true → DENIED
@@ -250,6 +274,7 @@ Result: 1 generation, 1 credit deducted ✅
 ```
 
 ### Attack: Two Tabs
+
 ```
 Tab A: Generates → isGenerating=true
 Tab B: Tries to generate → DENIED
@@ -257,6 +282,7 @@ Result: Only Tab A succeeds ✅
 ```
 
 ### Attack: Double Submit
+
 ```
 User: Submits twice with network delay
 Request 1: Success → generation created, credit deducted
@@ -265,6 +291,7 @@ Result: Only 1 credit deducted ✅
 ```
 
 ### Attack: Frontend Manipulation
+
 ```
 Frontend tries to: Set localStorage.generations = 999
 Server: Queries DATABASE for true count
@@ -276,6 +303,7 @@ Result: Limit enforced correctly ✅
 ## 📊 Part 7: API Routes Status
 
 ### ✅ Completed (Using PostgreSQL)
+
 - [x] POST /api/auth/signup
 - [x] POST /api/auth/login
 - [x] GET /api/auth/me
@@ -288,6 +316,7 @@ Result: Limit enforced correctly ✅
 - [x] POST /api/upgrade (admin upgrade)
 
 ### 🔄 Ready for Integration
+
 - [ ] POST /api/generate (needs integration)
 
 ---
@@ -295,12 +324,14 @@ Result: Limit enforced correctly ✅
 ## 📦 Part 8: Code Files Summary
 
 ### Core Files
+
 - `lib/db.ts` - Prisma client singleton
 - `lib/accounts-db.ts` - PostgreSQL account operations
 - `lib/generation-service.ts` - Controlled pipeline
 - `prisma/schema.prisma` - Database schema
 
 ### API Routes
+
 - `app/api/auth/signup/route.ts` - User registration
 - `app/api/auth/login/route.ts` - User login
 - `app/api/auth/me/route.ts` - Current user info
@@ -310,6 +341,7 @@ Result: Limit enforced correctly ✅
 - `app/api/upgrade/route.ts` - Admin upgrade
 
 ### Configuration
+
 - `.env` - Database URL
 - `.env.local` - API keys (JWT, OpenAI, etc)
 - `package.json` - Dependencies (@prisma/client, etc)
@@ -319,6 +351,7 @@ Result: Limit enforced correctly ✅
 ## 🚀 Part 9: Deployment Checklist
 
 ### Pre-Deployment
+
 - [x] Schema designed
 - [x] Prisma client generated
 - [x] API routes updated to PostgreSQL
@@ -327,6 +360,7 @@ Result: Limit enforced correctly ✅
 - [x] Build passes: `npm run build` ✅
 
 ### Deployment
+
 - [ ] Create PostgreSQL database (Supabase/Neon)
 - [ ] Get DATABASE_URL connection string
 - [ ] Set DATABASE_URL in Vercel environment
@@ -335,6 +369,7 @@ Result: Limit enforced correctly ✅
 - [ ] Test: Create account → Generate → Check DB
 
 ### Post-Deployment
+
 - [ ] Monitor logs for errors
 - [ ] Test all 4 tiers (free, basic, standard, premium)
 - [ ] Test payment approval flow
@@ -347,6 +382,7 @@ Result: Limit enforced correctly ✅
 ## 🧪 Part 10: Testing Scenarios
 
 ### Scenario 1: Free Tier, Normal Usage
+
 ```
 1. User signs up (tier='free', generationsUsed=0, limit=3)
 2. User generates website #1 → ✅ (used=1)
@@ -358,6 +394,7 @@ Result: Limit enforced correctly ✅
 ```
 
 ### Scenario 2: Payment Approval
+
 ```
 1. User initiates payment for Standard tier
 2. Payment created: status='pending'
@@ -368,6 +405,7 @@ Result: Limit enforced correctly ✅
 ```
 
 ### Scenario 3: Subscription Expiry
+
 ```
 1. User has Premium until March 20, 2026
 2. Today is March 23, 2026
@@ -378,6 +416,7 @@ Result: Limit enforced correctly ✅
 ```
 
 ### Scenario 4: Concurrency/Spam
+
 ```
 1. User clicks "Generate"
 2. LOCK acquired: isGenerating=true
@@ -423,22 +462,26 @@ Result: Limit enforced correctly ✅
 ## 🎯 Part 12: Success Metrics
 
 ### Reliability
+
 - ✅ Zero data loss (persistent database)
 - ✅ Zero fairness exploits (server enforced)
 - ✅ Zero deadlocks (lock always released)
 
 ### Security
+
 - ✅ No double charges
 - ✅ No spam attacks
 - ✅ No limit bypass
 - ✅ No password leaks
 
 ### Performance
+
 - ✅ Fast queries (indexed fields)
 - ✅ Timeout protection (15s max)
 - ✅ Concurrent user support
 
 ### Scalability
+
 - ✅ Horizontal scaling (stateless API)
 - ✅ Database connection pooling
 - ✅ Ready for millions of users
@@ -450,24 +493,28 @@ Result: Limit enforced correctly ✅
 ### Common Issues & Solutions
 
 **"I'm stuck generating"**
+
 ```
 Check: SELECT * FROM accounts WHERE isGenerating=true
 If stuck: Admin can manually set isGenerating=false
 ```
 
 **"My credits disappeared"**
+
 ```
 Check: SELECT * FROM generations WHERE accountId=? ORDER BY generatedAt DESC
 View all generations and their timestamps
 ```
 
 **"Payment not approved"**
+
 ```
 Check: SELECT * FROM payments WHERE status='pending'
 Admin approves: PATCH /api/payment/approve with x-admin-key
 ```
 
 **"Limit not resetting"**
+
 ```
 Check: lastResetAt in database
 System resets daily/monthly based on tier
@@ -479,6 +526,7 @@ Force reset: UPDATE accounts SET lastResetAt=NOW()
 ## 🏆 Summary
 
 ### What We Built
+
 A complete, production-grade, fair, and secure website generation platform with:
 
 - ✅ Persistent PostgreSQL database
@@ -491,7 +539,9 @@ A complete, production-grade, fair, and secure website generation platform with:
 - ✅ Audit trail
 
 ### Result
+
 A system that:
+
 - Never loses data
 - Never lets users cheat
 - Never gets stuck

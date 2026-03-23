@@ -18,25 +18,27 @@ generateWebsiteControlled(
 ## How to Use in `/api/generate`
 
 ### Current Code (Unsafe ❌)
+
 ```typescript
 export async function POST(request: NextRequest) {
-  const { description } = await request.json()
-  const token = request.cookies.get('doltsite-token')?.value
-  const accountId = await verifyJWT(token)
-  const account = await findAccountById(accountId)
-  
+  const { description } = await request.json();
+  const token = request.cookies.get("doltsite-token")?.value;
+  const accountId = await verifyJWT(token);
+  const account = await findAccountById(accountId);
+
   // NO LOCK!
   // NO VALIDATION!
-  const html = generateTemplates[detectTemplate(description)](description)
-  
+  const html = generateTemplates[detectTemplate(description)](description);
+
   // AI might fail, but we already started!
-  await incrementUsage(account)
-  
-  return NextResponse.json({ success: true, html })
+  await incrementUsage(account);
+
+  return NextResponse.json({ success: true, html });
 }
 ```
 
 **Problems:**
+
 - ❌ No concurrency control
 - ❌ No validation before AI call
 - ❌ Unsafe incrementing
@@ -46,28 +48,29 @@ export async function POST(request: NextRequest) {
 ---
 
 ### New Code (Safe ✅)
+
 ```typescript
-import { generateWebsiteControlled } from '@/lib/generation-service'
-import { NextRequest, NextResponse } from 'next/server'
-import { verifyJWT, findAccountById } from '@/lib/accounts-db'
+import { generateWebsiteControlled } from "@/lib/generation-service";
+import { NextRequest, NextResponse } from "next/server";
+import { verifyJWT, findAccountById } from "@/lib/accounts-db";
 
 export async function POST(request: NextRequest) {
   try {
-    const { description } = await request.json()
-    
+    const { description } = await request.json();
+
     if (!description?.trim()) {
-      return NextResponse.json({ error: 'Prompt required' }, { status: 400 })
+      return NextResponse.json({ error: "Prompt required" }, { status: 400 });
     }
 
     // ── Get account from token ────────────────────────────────────────────
-    const token = request.cookies.get('doltsite-token')?.value
+    const token = request.cookies.get("doltsite-token")?.value;
     if (!token) {
-      return NextResponse.json({ error: 'Login required' }, { status: 401 })
+      return NextResponse.json({ error: "Login required" }, { status: 401 });
     }
 
-    const accountId = await verifyJWT(token)
+    const accountId = await verifyJWT(token);
     if (!accountId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
     // ── Call controlled generation pipeline ────────────────────────────────
@@ -83,22 +86,22 @@ export async function POST(request: NextRequest) {
       description,
       (prompt) => {
         // This function is isolated - no DB calls
-        const template = detectTemplate(prompt)
-        const html = generateTemplates[template](prompt)
-        return { html, template }
+        const template = detectTemplate(prompt);
+        const html = generateTemplates[template](prompt);
+        return { html, template };
       },
-      `req-${Date.now()}` // requestId for idempotency
-    )
+      `req-${Date.now()}`, // requestId for idempotency
+    );
 
     // ── Return result ─────────────────────────────────────────────────────
     if (!result.success) {
       return NextResponse.json(
-        { 
-          error: result.error || 'Generation failed',
-          message: result.message 
+        {
+          error: result.error || "Generation failed",
+          message: result.message,
         },
-        { status: 403 }
-      )
+        { status: 403 },
+      );
     }
 
     return NextResponse.json({
@@ -108,16 +111,16 @@ export async function POST(request: NextRequest) {
       message: result.message,
       usage: result.usage,
       tier: result.tier,
-    })
-
+    });
   } catch (error) {
-    console.error('Generate endpoint error:', error)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    console.error("Generate endpoint error:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
 ```
 
 **What's Guaranteed:**
+
 - ✅ Only one generation per user at a time
 - ✅ Limits are always checked before AI call
 - ✅ No double credits deducted
@@ -131,6 +134,7 @@ export async function POST(request: NextRequest) {
 ## Understanding the Pipeline Flow
 
 ### Success Case
+
 ```
 1. User sends prompt
 2. LOCK acquired (isGenerating = true)
@@ -142,6 +146,7 @@ export async function POST(request: NextRequest) {
 ```
 
 ### Limit Reached Case
+
 ```
 1. User sends prompt
 2. LOCK acquired (isGenerating = true)
@@ -152,6 +157,7 @@ export async function POST(request: NextRequest) {
 ```
 
 ### AI Failure Case
+
 ```
 1. User sends prompt
 2. LOCK acquired (isGenerating = true)
@@ -163,6 +169,7 @@ export async function POST(request: NextRequest) {
 ```
 
 ### DB Update Fails Case
+
 ```
 1. User sends prompt
 2. LOCK acquired (isGenerating = true)
@@ -179,20 +186,21 @@ export async function POST(request: NextRequest) {
 
 The pipeline returns these errors:
 
-| Error | Meaning | Recovery |
-|-------|---------|----------|
-| `concurrent_request` | User already generating | Wait for completion |
-| `access_denied` | Subscription inactive/expired | Renew subscription |
-| `access_denied` | Limit reached | Upgrade to higher tier |
-| `generation_failed` | AI timeout or error | Retry after delay |
-| `save_failed` | DB update failed | Retry (HTML is cached locally) |
-| `pipeline_error` | Unexpected error | Contact support |
+| Error                | Meaning                       | Recovery                       |
+| -------------------- | ----------------------------- | ------------------------------ |
+| `concurrent_request` | User already generating       | Wait for completion            |
+| `access_denied`      | Subscription inactive/expired | Renew subscription             |
+| `access_denied`      | Limit reached                 | Upgrade to higher tier         |
+| `generation_failed`  | AI timeout or error           | Retry after delay              |
+| `save_failed`        | DB update failed              | Retry (HTML is cached locally) |
+| `pipeline_error`     | Unexpected error              | Contact support                |
 
 ---
 
 ## Testing the Integration
 
 ### Test 1: Normal Generation (Should Work)
+
 ```bash
 curl -X POST http://localhost:3000/api/generate \
   -H "Cookie: doltsite-token=<valid_token>" \
@@ -202,6 +210,7 @@ curl -X POST http://localhost:3000/api/generate \
 ```
 
 **Expected Response:**
+
 ```json
 {
   "success": true,
@@ -214,6 +223,7 @@ curl -X POST http://localhost:3000/api/generate \
 ```
 
 ### Test 2: Spam Protection (Should Fail)
+
 ```bash
 # In two terminals, run simultaneously:
 curl -X POST http://localhost:3000/api/generate \
@@ -229,6 +239,7 @@ curl -X POST http://localhost:3000/api/generate \
 ```
 
 ### Test 3: Limit Exhaustion (Should Fail)
+
 ```bash
 # First, set user to max:
 # UPDATE accounts SET generationsUsed = 3 WHERE tier = 'free';
@@ -253,34 +264,27 @@ You can pass ANY generator function to the pipeline:
 
 ```typescript
 // Using inline templates
-const result = await generateWebsiteControlled(
-  accountId,
-  prompt,
-  (p) => generateTemplates[detectTemplate(p)](p)
-)
+const result = await generateWebsiteControlled(accountId, prompt, (p) =>
+  generateTemplates[detectTemplate(p)](p),
+);
 
 // Using OpenAI (advanced)
-const result = await generateWebsiteControlled(
-  accountId,
-  prompt,
-  async (p) => {
-    const openaiResult = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: p }],
-    })
-    return { html: openaiResult.choices[0].text, template: 'custom' }
-  }
-)
+const result = await generateWebsiteControlled(accountId, prompt, async (p) => {
+  const openaiResult = await openai.chat.completions.create({
+    model: "gpt-4",
+    messages: [{ role: "user", content: p }],
+  });
+  return { html: openaiResult.choices[0].text, template: "custom" };
+});
 
 // Using local ML model
-const result = await generateWebsiteControlled(
-  accountId,
-  prompt,
-  (p) => mlModel.generate(p)
-)
+const result = await generateWebsiteControlled(accountId, prompt, (p) =>
+  mlModel.generate(p),
+);
 ```
 
 The pipeline doesn't care about the implementation - it only cares about:
+
 1. Input: prompt string
 2. Output: { html, template }
 3. No side effects during execution
@@ -293,12 +297,12 @@ Add to the pipeline for production:
 
 ```typescript
 // At the start of generateWebsiteControlled:
-console.log(`[GENERATE] Starting for user ${accountId}`)
-console.log(`[VALIDATE] Checking limits...`)
+console.log(`[GENERATE] Starting for user ${accountId}`);
+console.log(`[VALIDATE] Checking limits...`);
 
 // In finally block:
-console.log(`[RELEASE] Lock released for user ${accountId}`)
-console.log(`[STATS] Time: ${Date.now() - startTime}ms`)
+console.log(`[RELEASE] Lock released for user ${accountId}`);
+console.log(`[STATS] Time: ${Date.now() - startTime}ms`);
 ```
 
 ---
@@ -306,25 +310,29 @@ console.log(`[STATS] Time: ${Date.now() - startTime}ms`)
 ## Common Mistakes to Avoid
 
 ❌ **DON'T:**
+
 ```typescript
 // Don't call AI before validation
-const html = await generateWebsite(prompt)
-if (!canGenerate(user)) return
+const html = await generateWebsite(prompt);
+if (!canGenerate(user)) return;
 ```
 
 ❌ **DON'T:**
+
 ```typescript
 // Don't forget to release lock
-if (error) return
+if (error) return;
 ```
 
 ❌ **DON'T:**
+
 ```typescript
 // Don't trust frontend to count usage
-user.generations_used = frontend_value
+user.generations_used = frontend_value;
 ```
 
 ✅ **DO:**
+
 ```typescript
 // Use the controlled pipeline - it handles everything
 const result = await generateWebsiteControlled(...)
@@ -349,11 +357,13 @@ const result = await generateWebsiteControlled(...)
 ## Summary
 
 **Before Integration:**
+
 ```
 User → API → (no checks) → AI → DB → Maybe wrong?
 ```
 
 **After Integration:**
+
 ```
 User → API → LOCK → CHECK → AI → UPDATE DB → RELEASE ✅
        ↑                                        ↓

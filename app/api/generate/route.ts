@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
   verifyJWT, findAccountById,
-  canAccountGenerate, incrementUsage, isAccountExpired,
 } from '@/lib/accounts-db'
+import { generateWebsiteControlled } from '@/lib/generation-service'
 
 // Extract meaningful info from the description
 function parsePrompt(description: string) {
@@ -664,44 +664,80 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // ── Account-based auth (preferred) ──────────────────────────────────────
+    // ── Account-based auth (required) ────────────────────────────────────────
     const token = request.cookies.get('doltsite-token')?.value
-    if (token) {
-      const accountId = await verifyJWT(token)
-      const account = accountId ? await findAccountById(accountId) : null
-      if (account) {
-        if (isAccountExpired(account)) {
-          return NextResponse.json(
-            { error: 'subscription_expired', message: 'Your subscription has expired. Please renew.' },
-            { status: 403 }
-          )
-        }
-        if (!canAccountGenerate(account)) {
-          return NextResponse.json(
-            { error: 'limit_reached', message: "You've reached your generation limit. Upgrade to continue.", tier: account.tier, usage: account.usage },
-            { status: 403 }
-          )
-        }
-
-        const detectedTemplate = detectTemplate(description)
-        const html = generateTemplates[detectedTemplate](description)
-        const updated = await incrementUsage(account.id)
-
-        return NextResponse.json({
-          success: true, html, template: detectedTemplate,
-          message: 'Website generated successfully',
-          usage: updated?.usage, tier: updated?.tier,
-        })
-      }
+    if (!token) {
+      return NextResponse.json(
+        { error: 'auth_required', message: 'Please create a free account to generate websites.' },
+        { status: 401 }
+      )
     }
 
-    // ── No account — require login ───────────────────────────────────────────
-    return NextResponse.json(
-      { error: 'auth_required', message: 'Please create a free account to generate websites.' },
-      { status: 401 }
+    const accountId = await verifyJWT(token)
+    if (!accountId) {
+      return NextResponse.json(
+        { error: 'invalid_token', message: 'Invalid or expired token.' },
+        { status: 401 }
+      )
+    }
+
+    const account = await findAccountById(accountId)
+    if (!account) {
+      return NextResponse.json(
+        { error: 'account_not_found', message: 'Account not found.' },
+        { status: 404 }
+      )
+    }
+
+    // Generate HTML using the template system
+    const detectedTemplate = detectTemplate(description)
+    const generatorFn = (prompt: string) => ({
+      html: generateTemplates[detectedTemplate](prompt),
+      template: detectedTemplate,
+    })
+
+    // Use the controlled pipeline
+    const result = await generateWebsiteControlled(
+      accountId,
+      description,
+      generatorFn
     )
+
+    if (!result.success) {
+      // Map errors to appropriate HTTP status codes
+      if (result.error === 'access_denied') {
+        return NextResponse.json(
+          { 
+            error: 'limit_reached', 
+            message: result.message,
+            tier: account.tier,
+            usage: account.usage,
+          },
+          { status: 403 }
+        )
+      }
+      if (result.error === 'concurrent_request') {
+        return NextResponse.json(
+          { error: 'concurrent_request', message: result.message },
+          { status: 429 }
+        )
+      }
+      return NextResponse.json(
+        { error: result.error || 'generation_failed', message: result.message },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      html: result.html,
+      template: result.template,
+      message: result.message,
+      usage: result.usage,
+      tier: result.tier,
+    })
   } catch (error) {
-    console.error('Error generating website:', error)
+    console.error('Error in /api/generate:', error)
     return NextResponse.json(
       { error: 'Failed to generate website' },
       { status: 500 }
