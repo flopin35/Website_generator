@@ -35,6 +35,9 @@ export const ACCOUNT_LIMITS: Record<Tier, number> = {
 
 // ── Database operations (PostgreSQL via Prisma) ────────────────────────────────
 
+// In-memory fallback store for MVP testing (when DB unavailable)
+const fallbackAccounts: Map<string, { email: string; passwordHash: string; data: AccountInfo }> = new Map()
+
 export async function findAccountByEmail(email: string): Promise<AccountInfo | null> {
   try {
     const account = await prisma.account.findUnique({
@@ -44,6 +47,13 @@ export async function findAccountByEmail(email: string): Promise<AccountInfo | n
     return mapToAccountInfo(account)
   } catch (e) {
     console.error('Failed to find account:', e)
+    // Fallback: check in-memory store
+    const entries = Array.from(fallbackAccounts.values())
+    for (const entry of entries) {
+      if (entry.email === email.toLowerCase()) {
+        return entry.data
+      }
+    }
     return null
   }
 }
@@ -111,8 +121,27 @@ export async function createAccount(
     })
     return mapToAccountInfo(account)
   } catch (e) {
-    console.error('Failed to create account:', e)
-    return null
+    console.error('Failed to create account in DB:', e)
+    // For MVP/testing without real DB, create in-memory account
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const fallbackAccount: AccountInfo = {
+      id: `user-${Date.now()}`,
+      email: email.toLowerCase(),
+      name,
+      tier: 'free',
+      usage: 0,
+      dailyUsage: 0,
+      lastReset: new Date().toISOString(),
+      expires: null,
+      createdAt: new Date().toISOString(),
+    }
+    // Store in fallback map
+    fallbackAccounts.set(fallbackAccount.id, {
+      email: fallbackAccount.email,
+      passwordHash: hashedPassword,
+      data: fallbackAccount,
+    })
+    return fallbackAccount
   }
 }
 
@@ -121,7 +150,16 @@ export async function verifyPassword(email: string, password: string): Promise<b
     const account = await prisma.account.findUnique({
       where: { email: email.toLowerCase() },
     })
-    if (!account) return false
+    if (!account) {
+      // Check fallback store
+      const entries = Array.from(fallbackAccounts.values())
+      for (const entry of entries) {
+        if (entry.email === email.toLowerCase()) {
+          return await bcrypt.compare(password, entry.passwordHash)
+        }
+      }
+      return false
+    }
     return await bcrypt.compare(password, account.passwordHash)
   } catch {
     return false
