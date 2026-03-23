@@ -1,0 +1,86 @@
+// Prisma schema for Doltsite
+// PostgreSQL database (Supabase/Neon recommended)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User account model
+model Account {
+  id            String   @id @default(cuid())
+  email         String   @unique @db.VarChar(255)
+  name          String   @db.VarChar(255)
+  passwordHash  String   @db.Text
+
+  // Subscription tier: free | basic | standard | premium
+  tier          String   @default("free") @db.VarChar(20)
+
+  // Usage tracking (daily for free/basic, monthly for standard/premium)
+  usage         Int      @default(0)        // Total usage (for standard/premium monthly)
+  dailyUsage    Int      @default(0)        // Today's usage (for free/basic daily limits)
+  lastReset     DateTime @default(now())    // When daily counter was last reset
+
+  // Subscription expiry (null = free or active, if present = expired)
+  expires       DateTime?
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  payments      Payment[]
+
+  @@index([email])
+  @@index([tier])
+  @@map("accounts")
+}
+
+// Payment/subscription record
+model Payment {
+  id            String   @id @default(cuid())
+  accountId     String   @db.VarChar(255)
+  account       Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  // Payment details
+  amount        String   @db.VarChar(50)   // "20 GHS", "50 GHS", etc.
+  tier          String   @db.VarChar(20)   // basic | standard | premium
+  durationDays  Int      @default(30)      // How long subscription lasts
+
+  // Payment status: pending | completed | failed
+  status        String   @default("pending") @db.VarChar(20)
+  
+  // Payment reference
+  reference     String?  @db.VarChar(255)  // MoMo transaction ID, etc.
+  note          String?  @db.Text
+
+  // When initiated and completed
+  submittedAt   DateTime @default(now())
+  completedAt   DateTime?
+
+  @@index([accountId])
+  @@index([status])
+  @@map("payments")
+}
+
+// Session cache (optional, for fast session lookups)
+// Using PostgreSQL instead of Redis for reliability
+model Session {
+  id            String   @id @default(cuid())
+  accountId     String   @db.VarChar(255)
+
+  // JWT token and expiry
+  token         String   @db.Text
+  expiresAt     DateTime
+
+  // For cleanup
+  createdAt     DateTime @default(now())
+
+  @@index([accountId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
