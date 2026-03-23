@@ -137,17 +137,18 @@ export function isAccountExpired(account: AccountInfo): boolean {
 }
 
 export function canAccountGenerate(account: AccountInfo): boolean {
-  if (isAccountExpired(account)) return false
-  if (account.tier === 'free' || account.tier === 'basic') {
-    // Daily limit for free/basic
-    return account.dailyUsage < ACCOUNT_LIMITS[account.tier]
+  // Check subscription validity (expires in past?)
+  if (account.expires && new Date() > new Date(account.expires)) {
+    return false
   }
-  if (account.tier === 'standard') {
-    // Monthly limit for standard
-    return account.usage < ACCOUNT_LIMITS.standard
+
+  // Premium tier → always allowed (if subscription valid)
+  if (account.tier === 'premium') {
+    return true
   }
-  // Premium: unlimited
-  return true
+
+  // Free/Basic/Standard → check generation limit
+  return account.dailyUsage < ACCOUNT_LIMITS[account.tier]
 }
 
 export function getRemainingGenerations(account: AccountInfo): number {

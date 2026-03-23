@@ -10,33 +10,55 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User account model
+// User account model — CORE business logic
 model Account {
   id            String   @id @default(cuid())
   email         String   @unique @db.VarChar(255)
   name          String   @db.VarChar(255)
   passwordHash  String   @db.Text
 
-  // Subscription tier: free | basic | standard | premium
+  // 🧱 1. SUBSCRIPTION TIER (determines limits & cost)
+  // free → 3/day
+  // basic → 10/day
+  // standard → 200/month
+  // premium → unlimited
   tier          String   @default("free") @db.VarChar(20)
+  
+  // 🧱 2. SUBSCRIPTION STATUS (is subscription valid?)
+  // "active" = paying or free tier
+  // "expired" = subscription ended, needs renewal
+  // "cancelled" = user cancelled subscription
+  subscriptionStatus String @default("active") @db.VarChar(20)
 
-  // Usage tracking (daily for free/basic, monthly for standard/premium)
-  usage         Int      @default(0)        // Total usage (for standard/premium monthly)
-  dailyUsage    Int      @default(0)        // Today's usage (for free/basic daily limits)
-  lastReset     DateTime @default(now())    // When daily counter was last reset
+  // 🧱 3. GENERATION LIMITS (enforce "3 free then pay" logic)
+  // For free/basic → daily limit
+  // For standard → monthly limit
+  // For premium → unlimited
+  generationsUsed   Int      @default(0)        // Generations used in current period
+  generationsLimit  Int      @default(3)        // Maximum allowed (set by tier)
+  lastResetAt       DateTime @default(now())    // When limit was last reset (daily or monthly)
 
-  // Subscription expiry (null = free or active, if present = expired)
-  expires       DateTime?
+  // 🧱 4. SUBSCRIPTION VALIDITY
+  // When does subscription expire?
+  // null = free tier (no expiry)
+  // future date = subscription active until this date
+  // past date = subscription expired
+  subscriptionExpiresAt DateTime?
 
-  // Timestamps
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  // 🧱 5. ACTIVITY TRACKING (optional but powerful)
+  lastLoginAt       DateTime?                   // When user last logged in
+  lastGenerationAt  DateTime?                   // When user last generated a website
+  createdAt         DateTime @default(now())    // Account creation date
+  updatedAt         DateTime @updatedAt
 
   // Relations
-  payments      Payment[]
+  payments          Payment[]
+  generations       Generation[]
 
-  @@index([email])
-  @@index([tier])
+  @@index([email])                    // Fast lookup by email
+  @@index([tier])                     // Find all users on each tier
+  @@index([subscriptionStatus])       // Find expired subscriptions
+  @@index([subscriptionExpiresAt])    // Find subscriptions expiring soon
   @@map("accounts")
 }
 
@@ -65,6 +87,28 @@ model Payment {
   @@index([accountId])
   @@index([status])
   @@map("payments")
+}
+
+// 🔥 GENERATION LOG — Track every website generated
+// THIS is how you enforce limits like "3 free then pay"
+model Generation {
+  id            String   @id @default(cuid())
+  accountId     String   @db.VarChar(255)
+  account       Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  // What was generated
+  description   String   @db.Text           // User's prompt: "restaurant website"
+  htmlOutput    String   @db.Text           // Generated HTML (store for redownload)
+  
+  // When was it generated (for monthly/daily reset logic)
+  generatedAt   DateTime @default(now())
+  
+  // Did it count towards user's limit? (yes for paid, no for demo)
+  countedTowardLimit Boolean @default(true)
+
+  @@index([accountId])
+  @@index([generatedAt])
+  @@map("generations")
 }
 
 // Session cache (optional, for fast session lookups)
