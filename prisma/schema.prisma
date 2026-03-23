@@ -51,6 +51,11 @@ model Account {
   createdAt         DateTime @default(now())    // Account creation date
   updatedAt         DateTime @updatedAt
 
+  // 🔥 6. CONCURRENCY CONTROL (prevent spam/double clicks)
+  isGenerating      Boolean?  @default(false)   // Is user currently generating?
+  lastRequestId     String?   @db.VarChar(255)  // Last request ID (for idempotency)
+  lastRequestTime   DateTime?                    // When last request was made
+
   // Relations
   payments          Payment[]
   generations       Generation[]

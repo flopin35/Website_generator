@@ -16,16 +16,16 @@ This document confirms that **ALL 8 critical API routes** have been successfully
 
 ### Routes Migrated
 
-| Route | Old Storage | New Storage | Status |
-|-------|------------|-------------|--------|
-| `/api/auth/signup` | Redis | PostgreSQL | ✅ |
-| `/api/auth/login` | Redis | PostgreSQL | ✅ |
-| `/api/auth/me` | Redis | PostgreSQL | ✅ |
-| `/api/generate` | Redis | PostgreSQL | ✅ |
-| `/api/payment/initiate` | Redis | PostgreSQL | ✅ |
-| `/api/payment/approve` | Redis | PostgreSQL | ✅ |
-| `/api/upgrade` | Redis | PostgreSQL | ✅ |
-| `/api/usage` | Redis | PostgreSQL | ✅ |
+| Route                   | Old Storage | New Storage | Status |
+| ----------------------- | ----------- | ----------- | ------ |
+| `/api/auth/signup`      | Redis       | PostgreSQL  | ✅     |
+| `/api/auth/login`       | Redis       | PostgreSQL  | ✅     |
+| `/api/auth/me`          | Redis       | PostgreSQL  | ✅     |
+| `/api/generate`         | Redis       | PostgreSQL  | ✅     |
+| `/api/payment/initiate` | Redis       | PostgreSQL  | ✅     |
+| `/api/payment/approve`  | Redis       | PostgreSQL  | ✅     |
+| `/api/upgrade`          | Redis       | PostgreSQL  | ✅     |
+| `/api/usage`            | Redis       | PostgreSQL  | ✅     |
 
 ---
 
@@ -44,22 +44,26 @@ import { verifyJWT, findAccountByEmail, ... } from '@/lib/accounts-db'
 ```
 
 #### `/api/auth/signup/route.ts`
+
 - Creates accounts in PostgreSQL with bcrypt-hashed passwords
 - Returns JWT token in httpOnly cookie
 - **Business Logic:** Prevents duplicate emails (database unique constraint)
 
 #### `/api/auth/login/route.ts`
+
 - Verifies password against PostgreSQL bcrypt hash
 - Issues JWT tokens for session management
 - **Business Logic:** Case-insensitive email lookup
 
 #### `/api/auth/me/route.ts`
+
 - Returns current user info from PostgreSQL
 - Shows remaining generations (calculated from `generationsUsed` and `generationsLimit`)
 - Shows subscription expiry status
 - **Business Logic:** Checks if subscription expired
 
 #### `/api/generate/route.ts` ⚡ CRITICAL
+
 - **ENFORCES generation limits server-side** (cannot be bypassed)
 - Checks user has not exceeded daily/monthly limit in PostgreSQL
 - Checks subscription has not expired
@@ -72,12 +76,14 @@ import { verifyJWT, findAccountByEmail, ... } from '@/lib/accounts-db'
   - Premium tier: Unlimited
 
 #### `/api/payment/initiate/route.ts`
+
 - Creates pending payment record in PostgreSQL
 - Returns unique reference code for MoMo payment
 - Prevents duplicate pending payments for same account
 - **Business Logic:** Links payment to account
 
 #### `/api/payment/approve/route.ts` ⚡ ADMIN ENDPOINT
+
 - Admin approves payment in PostgreSQL
 - Automatically upgrades account tier
 - Sets `subscriptionExpiresAt` (30 days from approval)
@@ -88,11 +94,13 @@ import { verifyJWT, findAccountByEmail, ... } from '@/lib/accounts-db'
   - Cascades account upgrade across all related records
 
 #### `/api/upgrade/route.ts` ⚡ ADMIN ENDPOINT
+
 - Admin manually upgrades account (for manual payments/testing)
 - Sets tier, resets usage, sets expiry
 - **Business Logic:** Enforces admin password
 
 #### `/api/usage/route.ts`
+
 - Returns account usage stats from PostgreSQL
 - For unauthenticated users: returns free tier defaults
 - For authenticated users: returns actual usage from database
@@ -104,20 +112,31 @@ This is the **central PostgreSQL access layer** that ALL routes use:
 
 ```typescript
 // Core functions:
-export async function findAccountByEmail(email: string): Promise<AccountInfo | null>
-export async function findAccountById(id: string): Promise<AccountInfo | null>
-export async function createAccount(email: string, name: string, password: string): Promise<AccountInfo | null>
-export async function verifyPassword(email: string, password: string): Promise<boolean>
+export async function findAccountByEmail(
+  email: string,
+): Promise<AccountInfo | null>;
+export async function findAccountById(id: string): Promise<AccountInfo | null>;
+export async function createAccount(
+  email: string,
+  name: string,
+  password: string,
+): Promise<AccountInfo | null>;
+export async function verifyPassword(
+  email: string,
+  password: string,
+): Promise<boolean>;
 
 // Usage tracking:
-export async function incrementUsage(accountId: string): Promise<AccountInfo | null>
-export function getRemainingGenerations(account: AccountInfo): number
-export function canAccountGenerate(account: AccountInfo): boolean
-export function isAccountExpired(account: AccountInfo): boolean
+export async function incrementUsage(
+  accountId: string,
+): Promise<AccountInfo | null>;
+export function getRemainingGenerations(account: AccountInfo): number;
+export function canAccountGenerate(account: AccountInfo): boolean;
+export function isAccountExpired(account: AccountInfo): boolean;
 
 // JWT:
-export async function generateJWT(accountId: string): Promise<string>
-export async function verifyJWT(token: string): Promise<string | null>
+export async function generateJWT(accountId: string): Promise<string>;
+export async function verifyJWT(token: string): Promise<string | null>;
 
 // Account limits:
 export const ACCOUNT_LIMITS: Record<Tier, number> = {
@@ -125,7 +144,7 @@ export const ACCOUNT_LIMITS: Record<Tier, number> = {
   basic: 10,
   standard: 200,
   premium: Infinity,
-}
+};
 ```
 
 ### 3. **Database Client** (`lib/db.ts`)
@@ -133,13 +152,13 @@ export const ACCOUNT_LIMITS: Record<Tier, number> = {
 Singleton Prisma client that prevents multiple connections:
 
 ```typescript
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from "@prisma/client";
 
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query'] : [],
-  })
+    log: process.env.NODE_ENV === "development" ? ["query"] : [],
+  });
 ```
 
 ### 4. **Prisma Schema** (`prisma/schema.prisma`)
@@ -221,6 +240,7 @@ CREATE TABLE generations (
 ### Anti-Cheat Protections ✅
 
 User CANNOT:
+
 - ❌ Reset usage by clearing localStorage (usage in database)
 - ❌ Generate unlimited sites (limit enforced server-side)
 - ❌ Bypass subscription checks (checked in database)
@@ -232,24 +252,28 @@ User CANNOT:
 ## 📊 Account Types & Limits
 
 ### Free Tier
+
 - **Limit:** 3 generations per day
 - **Reset:** Daily (every 24 hours)
 - **Subscription:** Never expires
 - **Cost:** $0/month
 
 ### Basic Tier
+
 - **Limit:** 10 generations per day
 - **Reset:** Daily (every 24 hours)
 - **Subscription:** 30 days (set on payment approval)
 - **Cost:** 20 GHS/month
 
 ### Standard Tier
+
 - **Limit:** 200 generations per month
 - **Reset:** Monthly (every 30 days)
 - **Subscription:** 30 days (set on payment approval)
 - **Cost:** 50 GHS/month
 
 ### Premium Tier
+
 - **Limit:** Unlimited
 - **Reset:** N/A (no limit)
 - **Subscription:** 30 days (set on payment approval)
@@ -260,6 +284,7 @@ User CANNOT:
 ## 🚀 How It Works (Step-by-Step)
 
 ### User Signs Up
+
 ```
 1. User submits email/password to /api/auth/signup
 2. Server hashes password with bcrypt
@@ -271,6 +296,7 @@ User CANNOT:
 ```
 
 ### User Generates a Website
+
 ```
 1. User submits description to /api/generate
 2. Server retrieves account from PostgreSQL
@@ -284,6 +310,7 @@ User CANNOT:
 ```
 
 ### User Upgrades to Basic
+
 ```
 1. User initiates payment via /api/payment/initiate
 2. Server creates Payment record (status='pending')
@@ -301,6 +328,7 @@ User CANNOT:
 ```
 
 ### Daily Limit Resets (Automatic)
+
 ```
 For free/basic tiers:
 - When user tries to generate
@@ -310,6 +338,7 @@ For free/basic tiers:
 ```
 
 ### Monthly Limit Resets (Automatic)
+
 ```
 For standard tier:
 - When user tries to generate
@@ -325,6 +354,7 @@ For standard tier:
 ### Local Development
 
 1. **Install Dependencies:**
+
    ```bash
    npm install
    npx prisma generate
@@ -333,8 +363,8 @@ For standard tier:
 2. **Set Up Database:**
    - Create PostgreSQL database (local or cloud)
    - Update `.env` with `DATABASE_URL`
-   
 3. **Create Tables:**
+
    ```bash
    npx prisma db push
    ```
@@ -353,6 +383,7 @@ For standard tier:
    - Railway: https://railway.app
 
 2. **Get Connection String:**
+
    ```
    postgresql://user:password@host:5432/doltsite
    ```
@@ -393,55 +424,63 @@ For standard tier:
 ## 🚨 Critical Issues FIXED
 
 ### Before (Redis)
+
 ❌ Data lost on server restart  
 ❌ No persistence between deployments  
 ❌ Users could cheat by clearing localStorage  
 ❌ No audit trail for payments  
-❌ Subscription expiry not enforced  
+❌ Subscription expiry not enforced
 
 ### After (PostgreSQL)
+
 ✅ Data persists permanently  
 ✅ Survives deployments  
 ✅ Cheating impossible (server-side enforcement)  
 ✅ Full payment audit trail  
-✅ Subscription expiry enforced in database  
+✅ Subscription expiry enforced in database
 
 ---
 
 ## 📝 Code Examples
 
 ### Creating an Account
+
 ```typescript
 // In /api/auth/signup/route.ts
-const account = await createAccount(email, name, password)
+const account = await createAccount(email, name, password);
 // Returns: { id, email, name, tier: 'free', usage: 0, ... }
 // Account stored in PostgreSQL
 ```
 
 ### Checking Generation Limit
+
 ```typescript
 // In /api/generate/route.ts
-const account = await findAccountById(accountId)
+const account = await findAccountById(accountId);
 
 if (!canAccountGenerate(account)) {
-  return NextResponse.json({
-    error: 'limit_reached',
-    message: "You've reached your generation limit"
-  }, { status: 403 })
+  return NextResponse.json(
+    {
+      error: "limit_reached",
+      message: "You've reached your generation limit",
+    },
+    { status: 403 },
+  );
 }
 
 // Generate website...
 
-const updated = await incrementUsage(accountId)
+const updated = await incrementUsage(accountId);
 // generationsUsed automatically incremented
 // Daily/monthly reset checked automatically
 ```
 
 ### Upgrading Account
+
 ```typescript
 // In /api/payment/approve/route.ts
-const expiresAt = new Date()
-expiresAt.setDate(expiresAt.getDate() + payment.durationDays)
+const expiresAt = new Date();
+expiresAt.setDate(expiresAt.getDate() + payment.durationDays);
 
 await prisma.account.update({
   where: { id: payment.accountId },
@@ -450,7 +489,7 @@ await prisma.account.update({
     subscriptionExpiresAt: expiresAt,
     generationsUsed: 0, // Reset usage on upgrade
   },
-})
+});
 ```
 
 ---
@@ -458,6 +497,7 @@ await prisma.account.update({
 ## 🔄 Next Steps
 
 ### Immediate (Required)
+
 1. [ ] Create PostgreSQL database (Supabase/Neon/Railway)
 2. [ ] Update `.env` with DATABASE_URL
 3. [ ] Run `npx prisma db push`
@@ -466,12 +506,14 @@ await prisma.account.update({
 6. [ ] Add DATABASE_URL to Vercel environment
 
 ### Short-term (Recommended)
+
 1. [ ] Set up automated daily/monthly reset cron jobs
 2. [ ] Create admin dashboard to view payments
 3. [ ] Send email on subscription renewal/expiry
 4. [ ] Add rate limiting to prevent abuse
 
 ### Long-term (Optional)
+
 1. [ ] Add analytics (usage per account, revenue, etc.)
 2. [ ] Implement refunds
 3. [ ] Add trial periods
