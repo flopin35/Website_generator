@@ -739,7 +739,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error in /api/generate:', error)
     return NextResponse.json(
-      { error: 'Failed to generate website' },
+      { 
+        error: 'generation_error',
+        message: 'We encountered an error generating your website. Please try again or contact support.',
+      },
       { status: 500 }
     )
   }

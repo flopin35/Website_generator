@@ -42,6 +42,9 @@ export async function POST(request: NextRequest) {
     return response
   } catch (e) {
     console.error('Login error:', e)
-    return NextResponse.json({ error: 'Login failed' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Login service unavailable. Please try again later.',
+      message: 'An error occurred during login'
+    }, { status: 503 })
   }
 }

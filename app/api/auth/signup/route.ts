@@ -23,7 +23,10 @@ export async function POST(request: NextRequest) {
 
     const account = await createAccount(email.toLowerCase().trim(), name.trim(), password)
     if (!account) {
-      return NextResponse.json({ error: 'Failed to create account' }, { status: 500 })
+      return NextResponse.json({ 
+        error: 'Unable to create account. Please try again later or contact support.',
+        details: 'Database connection failed'
+      }, { status: 503 })
     }
 
     const token = await generateJWT(account.id)
@@ -49,6 +52,9 @@ export async function POST(request: NextRequest) {
     return response
   } catch (e) {
     console.error('Signup error:', e)
-    return NextResponse.json({ error: 'Failed to create account' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Something went wrong. Please try again or contact support.',
+      message: 'Signup process encountered an error'
+    }, { status: 500 })
   }
 }
