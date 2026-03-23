@@ -35,6 +35,7 @@ async function acquireLock(accountId: string): Promise<boolean> {
   try {
     const account = await prisma.account.findUnique({
       where: { id: accountId },
+      select: { isGenerating: true },
     })
 
     if (account?.isGenerating) {
