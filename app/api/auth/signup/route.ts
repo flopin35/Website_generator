@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
-  findAccountByEmail, saveAccount, hashPassword, createToken, todayStr,
-} from '@/lib/accounts'
+  findAccountByEmail, createAccount, generateJWT,
+} from '@/lib/accounts-db'
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,35 +21,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'An account with this email already exists' }, { status: 409 })
     }
 
-    const id = 'acc-' + Date.now() + '-' + Math.random().toString(36).slice(2)
-    const passwordHash = await hashPassword(password)
-
-    const account = {
-      id,
-      email: email.toLowerCase().trim(),
-      passwordHash,
-      name: name.trim(),
-      tier: 'free' as const,
-      usage: 0,
-      dailyUsage: 0,
-      lastReset: todayStr(),
-      expires: null,
-      createdAt: new Date().toISOString(),
+    const account = await createAccount(email.toLowerCase().trim(), name.trim(), password)
+    if (!account) {
+      return NextResponse.json({ error: 'Failed to create account' }, { status: 500 })
     }
 
-    await saveAccount(account)
-    const token = await createToken(id)
+    const token = await generateJWT(account.id)
 
     const response = NextResponse.json({
       success: true,
       account: {
-        id,
+        id: account.id,
         email: account.email,
         name: account.name,
         tier: account.tier,
-        expires: null,
-        usage: 0,
-        dailyUsage: 0,
+        expires: account.expires,
+        usage: account.usage,
+        dailyUsage: account.dailyUsage,
       },
     })
     response.cookies.set('doltsite-token', token, {

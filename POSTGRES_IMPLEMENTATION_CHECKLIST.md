@@ -9,74 +9,83 @@ This migration is essential because the current Redis-only system **will lose us
 ## 📋 Quick Setup (15 minutes)
 
 ### Step 1: Database Setup
+
 - [ ] Create Supabase account (https://supabase.com) OR Neon (https://neon.tech)
 - [ ] Create new PostgreSQL database
 - [ ] Copy connection string (`DATABASE_URL`)
 - [ ] Add to `.env.local`: `DATABASE_URL=postgresql://...`
 
 ### Step 2: Initialize Prisma
+
 ```bash
 # Run locally
 npx prisma generate
 npx prisma db push
 ```
+
 - [ ] Prisma tables created in database
 
 ### Step 3: Update API Routes (30 minutes)
 
 **File: `app/api/auth/signup.ts`**
+
 ```typescript
 // Change this:
-import { createAccount } from '@/lib/accounts'
+import { createAccount } from "@/lib/accounts";
 
 // To this:
-import { createAccount } from '@/lib/accounts-db'
+import { createAccount } from "@/lib/accounts-db";
 ```
 
 **File: `app/api/auth/login.ts`**
+
 ```typescript
 // Change this:
-import { findAccountByEmail, verifyPassword } from '@/lib/accounts'
+import { findAccountByEmail, verifyPassword } from "@/lib/accounts";
 
 // To this:
-import { findAccountByEmail, verifyPassword } from '@/lib/accounts-db'
+import { findAccountByEmail, verifyPassword } from "@/lib/accounts-db";
 ```
 
 **File: `app/api/auth/me.ts`**
+
 ```typescript
 // Change this:
-import { findAccountById } from '@/lib/accounts'
+import { findAccountById } from "@/lib/accounts";
 
 // To this:
-import { findAccountById } from '@/lib/accounts-db'
+import { findAccountById } from "@/lib/accounts-db";
 ```
 
 **File: `app/api/generate.ts`**
+
 ```typescript
 // Change this:
-import { canAccountGenerate, incrementUsage } from '@/lib/accounts'
+import { canAccountGenerate, incrementUsage } from "@/lib/accounts";
 
 // To this:
-import { canAccountGenerate, incrementUsage } from '@/lib/accounts-db'
+import { canAccountGenerate, incrementUsage } from "@/lib/accounts-db";
 ```
 
 **File: `app/api/upgrade.ts`**
+
 ```typescript
 // Change this:
-import { findAccountById, saveAccount } from '@/lib/accounts'
+import { findAccountById, saveAccount } from "@/lib/accounts";
 
 // To this:
-import { findAccountById, saveAccount } from '@/lib/accounts-db'
+import { findAccountById, saveAccount } from "@/lib/accounts-db";
 // Plus: Create Payment records in database
 ```
 
 **File: `app/api/payment/approve.ts`**
+
 ```typescript
 // Change this:
-import { savePayment } from '@/lib/payments'
+import { savePayment } from "@/lib/payments";
 
 // To this:
-import { prisma } from '@/lib/db'
+import { prisma } from "@/lib/db";
 // Use: await prisma.payment.create(...)
 ```
 
@@ -85,6 +94,7 @@ import { prisma } from '@/lib/db'
 - [ ] Payment records saved to database
 
 ### Step 4: Test Locally
+
 ```bash
 npm run build
 npm run start
@@ -138,6 +148,7 @@ curl -X POST https://your-app.vercel.app/api/auth/login \
 ## 🔄 Rollback Plan (if needed)
 
 If anything breaks:
+
 1. Old `lib/accounts.ts` still exists (Redis version)
 2. Revert imports back to old library
 3. Delete Prisma migration (optional)
@@ -147,16 +158,16 @@ If anything breaks:
 
 ## 📊 Current Status
 
-| Item | Status |
-|------|--------|
-| Prisma setup | ✅ Done |
-| Schema created | ✅ Done |
-| New DB service | ✅ Done |
-| Migration guide | ✅ Done |
-| **API routes** | ⏳ TODO |
+| Item               | Status  |
+| ------------------ | ------- |
+| Prisma setup       | ✅ Done |
+| Schema created     | ✅ Done |
+| New DB service     | ✅ Done |
+| Migration guide    | ✅ Done |
+| **API routes**     | ⏳ TODO |
 | **Database setup** | ⏳ TODO |
-| **Local testing** | ⏳ TODO |
-| **Vercel deploy** | ⏳ TODO |
+| **Local testing**  | ⏳ TODO |
+| **Vercel deploy**  | ⏳ TODO |
 
 ---
 
@@ -173,6 +184,7 @@ If anything breaks:
 ## 🆘 Help
 
 If you get stuck:
+
 1. Check `POSTGRES_MIGRATION_GUIDE.md` for detailed steps
 2. Check Supabase/Neon docs for connection string format
 3. Run `npx prisma migrate status` to check migration status

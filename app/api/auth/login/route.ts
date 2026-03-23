@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { findAccountByEmail, verifyPassword, createToken } from '@/lib/accounts'
+import { findAccountByEmail, verifyPassword, generateJWT } from '@/lib/accounts-db'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,12 +14,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
     }
 
-    const valid = await verifyPassword(password, account.passwordHash)
+    const valid = await verifyPassword(email, password)
     if (!valid) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
     }
 
-    const token = await createToken(account.id)
+    const token = await generateJWT(account.id)
 
     const response = NextResponse.json({
       success: true,

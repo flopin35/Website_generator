@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllPayments, updatePayment, PLAN_CONFIG } from '@/lib/payments'
-import { findAccountByEmail, saveAccount, todayStr, type Tier } from '@/lib/accounts'
+import { prisma } from '@/lib/db'
+import { findAccountById } from '@/lib/accounts-db'
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'doltsite-admin-2025'
 
@@ -11,8 +11,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const list = await getAllPayments()
-  return NextResponse.json({ payments: list })
+  const payments = await prisma.payment.findMany({
+    include: { account: true },
+    orderBy: { submittedAt: 'desc' },
+  })
+  return NextResponse.json({ payments })
 }
 
 // POST — approve or reject a payment (admin only)
@@ -29,40 +32,55 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'paymentId and action (approve|reject) required' }, { status: 400 })
     }
 
-    const allPayments = await getAllPayments()
-    const payment = allPayments.find(p => p.id === paymentId)
+    const payment = await prisma.payment.findUnique({
+      where: { id: paymentId },
+      include: { account: true },
+    })
     if (!payment) {
       return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
     }
 
     if (action === 'approve') {
-      await updatePayment(paymentId, { status: 'approved', ...(note ? { note } : {}) })
+      // Mark payment as completed
+      await prisma.payment.update({
+        where: { id: paymentId },
+        data: { 
+          status: 'completed',
+          completedAt: new Date(),
+          ...(note ? { note } : {})
+        },
+      })
 
-      const days = PLAN_CONFIG[payment.plan].days
-      const expires = new Date()
-      expires.setDate(expires.getDate() + days)
-      const expiresStr = expires.toISOString()
+      // Calculate subscription expiry
+      const expiresAt = new Date()
+      expiresAt.setDate(expiresAt.getDate() + payment.durationDays)
 
-      // Upgrade the linked account if one exists
-      if (payment.accountEmail) {
-        const account = await findAccountByEmail(payment.accountEmail)
-        if (account) {
-          account.tier = payment.plan as Tier
-          account.usage = 0
-          account.dailyUsage = 0
-          account.lastReset = todayStr()
-          account.expires = expiresStr
-          await saveAccount(account)
-        }
-      }
+      // Upgrade the account
+      await prisma.account.update({
+        where: { id: payment.accountId },
+        data: {
+          tier: payment.tier as any,
+          subscriptionStatus: 'active',
+          subscriptionExpiresAt: expiresAt,
+          generationsUsed: 0, // Reset usage on upgrade
+          lastResetAt: new Date(),
+        },
+      })
 
       return NextResponse.json({
         success: true,
-        message: `Payment approved. Account upgraded to ${payment.plan}.`,
-        expires: expiresStr,
+        message: `Payment approved. Account upgraded to ${payment.tier}.`,
+        expires: expiresAt.toISOString(),
       })
     } else {
-      await updatePayment(paymentId, { status: 'rejected', ...(note ? { note } : {}) })
+      // Reject payment
+      await prisma.payment.update({
+        where: { id: paymentId },
+        data: { 
+          status: 'failed',
+          ...(note ? { note } : {})
+        },
+      })
       return NextResponse.json({ success: true, message: 'Payment rejected.' })
     }
   } catch (e) {

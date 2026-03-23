@@ -12,10 +12,10 @@ export type AccountInfo = {
   email: string
   name: string
   tier: Tier
-  usage: number
-  dailyUsage: number
-  lastReset: string
-  expires: string | null
+  usage: number // generationsUsed
+  dailyUsage: number // tracked for daily limits
+  lastReset: string // lastResetAt
+  expires: string | null // subscriptionExpiresAt
   createdAt: string
 }
 
@@ -69,21 +69,20 @@ export async function saveAccount(account: AccountInfo): Promise<void> {
         email: account.email.toLowerCase(),
         name: account.name,
         tier: account.tier,
-        usage: account.usage,
-        dailyUsage: account.dailyUsage,
-        lastReset: new Date(account.lastReset),
-        expires: account.expires ? new Date(account.expires) : null,
+        generationsUsed: account.usage,
+        generationsLimit: ACCOUNT_LIMITS[account.tier],
+        lastResetAt: new Date(account.lastReset),
+        subscriptionExpiresAt: account.expires ? new Date(account.expires) : null,
       },
       create: {
         id: account.id,
         email: account.email.toLowerCase(),
         name: account.name,
         tier: account.tier,
-        usage: account.usage,
-        dailyUsage: account.dailyUsage,
-        lastReset: new Date(account.lastReset),
-        expires: account.expires ? new Date(account.expires) : null,
-        // passwordHash would be set separately during signup
+        generationsUsed: account.usage,
+        generationsLimit: ACCOUNT_LIMITS[account.tier],
+        lastResetAt: new Date(account.lastReset),
+        subscriptionExpiresAt: account.expires ? new Date(account.expires) : null,
         passwordHash: '',
       },
     })
@@ -105,9 +104,9 @@ export async function createAccount(
         name,
         passwordHash: hashedPassword,
         tier: 'free',
-        usage: 0,
-        dailyUsage: 0,
-        lastReset: new Date(),
+        generationsUsed: 0,
+        generationsLimit: ACCOUNT_LIMITS.free,
+        lastResetAt: new Date(),
       },
     })
     return mapToAccountInfo(account)
@@ -168,15 +167,19 @@ export async function incrementUsage(accountId: string): Promise<AccountInfo | n
 
     // Check if daily reset is needed (for free/basic)
     const now = new Date()
-    const lastReset = new Date(account.lastReset)
+    const lastReset = new Date(account.lastResetAt)
     const daysPassed = Math.floor((now.getTime() - lastReset.getTime()) / (1000 * 60 * 60 * 24))
 
-    let dailyUsage = account.dailyUsage
-    let lastResetTime = lastReset
+    // Determine if we should reset daily counter
+    // For free/basic: reset daily
+    // For standard: reset monthly (30 days)
+    const resetDays = account.tier === 'standard' ? 30 : 1
+    let generationsUsed = account.generationsUsed
+    let lastResetTime = account.lastResetAt
 
-    if (daysPassed > 0) {
-      // Reset daily counter
-      dailyUsage = 0
+    if (daysPassed >= resetDays) {
+      // Reset counter
+      generationsUsed = 0
       lastResetTime = now
     }
 
@@ -184,9 +187,9 @@ export async function incrementUsage(accountId: string): Promise<AccountInfo | n
     const updated = await prisma.account.update({
       where: { id: accountId },
       data: {
-        usage: account.usage + 1,
-        dailyUsage: dailyUsage + 1,
-        lastReset: lastResetTime,
+        generationsUsed: generationsUsed + 1,
+        lastResetAt: lastResetTime,
+        lastGenerationAt: now,
       },
     })
 
@@ -223,10 +226,10 @@ function mapToAccountInfo(account: any): AccountInfo {
     email: account.email,
     name: account.name,
     tier: account.tier as Tier,
-    usage: account.usage,
-    dailyUsage: account.dailyUsage,
-    lastReset: account.lastReset.toISOString(),
-    expires: account.expires ? account.expires.toISOString() : null,
+    usage: account.generationsUsed,
+    dailyUsage: account.generationsUsed, // Will be reset daily/monthly
+    lastReset: account.lastResetAt.toISOString(),
+    expires: account.subscriptionExpiresAt ? account.subscriptionExpiresAt.toISOString() : null,
     createdAt: account.createdAt.toISOString(),
   }
 }

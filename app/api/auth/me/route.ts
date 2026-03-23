@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken, findAccountById, isAccountExpired, getAccountRemaining } from '@/lib/accounts'
+import { findAccountById, verifyJWT, isAccountExpired, getRemainingGenerations } from '@/lib/accounts-db'
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get('doltsite-token')?.value
   if (!token) return NextResponse.json({ account: null })
 
-  const accountId = await verifyToken(token)
+  const accountId = await verifyJWT(token)
   if (!accountId) return NextResponse.json({ account: null })
 
   const account = await findAccountById(accountId)
   if (!account) return NextResponse.json({ account: null })
 
   const expired = isAccountExpired(account)
-  const remaining = getAccountRemaining(account)
+  const remaining = getRemainingGenerations(account)
 
   return NextResponse.json({
     account: {

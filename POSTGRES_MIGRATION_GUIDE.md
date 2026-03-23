@@ -10,6 +10,7 @@
 ## 🎯 What's Changed
 
 ### ❌ OLD Architecture (BROKEN)
+
 ```
 Redis (in-memory) → Stores users, accounts, passwords
 ↓
@@ -19,6 +20,7 @@ Data disappears if Redis restarts
 ```
 
 ### ✅ NEW Architecture (FIXED)
+
 ```
 PostgreSQL → Stores users, accounts, passwords (PERMANENT)
 ↓
@@ -34,6 +36,7 @@ Redis → ONLY sessions/caching (temporary)
 ### Step 1: Create PostgreSQL Database
 
 **Option A: Supabase (Recommended)**
+
 1. Go to https://supabase.com
 2. Click "New Project"
 3. Set name, password, region
@@ -43,6 +46,7 @@ Redis → ONLY sessions/caching (temporary)
 7. Replace `[YOUR-PASSWORD]` with your actual password
 
 **Option B: Neon**
+
 1. Go to https://neon.tech
 2. Click "Create Project"
 3. Select PostgreSQL
@@ -56,6 +60,7 @@ DATABASE_URL=postgresql://user:password@host:5432/doltsite
 ```
 
 **Example from Supabase:**
+
 ```
 postgresql://postgres.xxxxx:password@db.xxxxx.supabase.co:5432/postgres
 ```
@@ -78,13 +83,15 @@ npx prisma db push
 All API routes that use accounts need to be updated to use the new database service:
 
 **Before (Redis):**
+
 ```typescript
-import { findAccountByEmail, saveAccount } from '@/lib/accounts'
+import { findAccountByEmail, saveAccount } from "@/lib/accounts";
 ```
 
 **After (PostgreSQL):**
+
 ```typescript
-import { findAccountByEmail, saveAccount } from '@/lib/accounts-db'
+import { findAccountByEmail, saveAccount } from "@/lib/accounts-db";
 ```
 
 ---
@@ -143,16 +150,18 @@ curl -X POST http://localhost:3000/api/generate \
 ✅ **Scalability** - Handle millions of users  
 ✅ **Backups** - Native database backups  
 ✅ **Compliance** - GDPR-compliant data retention  
-✅ **Performance** - Indexed queries are fast  
+✅ **Performance** - Indexed queries are fast
 
 ---
 
 ## 💾 Database Backup
 
 ### Supabase
+
 Settings → Backups → Enable daily backups
 
 ### Neon
+
 Settings → Backups → Enable automated backups
 
 ---
@@ -169,6 +178,7 @@ Settings → Backups → Enable automated backups
 ## 📊 Schema Overview
 
 ### `accounts` table
+
 ```sql
 id (text) - Unique ID
 email (text) - Unique email
@@ -184,6 +194,7 @@ updatedAt (datetime) - Last update
 ```
 
 ### `payments` table
+
 ```sql
 id (text) - Payment ID
 accountId (text) - FK to accounts.id
@@ -220,15 +231,18 @@ completedAt (datetime) - When payment completed
 ## 🆘 Troubleshooting
 
 ### Error: "Cannot connect to database"
+
 - Check DATABASE_URL is correct
 - Ensure database is accessible from Vercel IP
 - Supabase: check if database is paused
 
 ### Error: "Relations don't exist"
+
 - Run: `npx prisma migrate deploy`
 - Or: `npx prisma db push`
 
 ### Error: "Unique constraint violation"
+
 - Email already exists
 - Handle duplicate email in signup
 

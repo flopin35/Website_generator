@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken, findAccountById, isAccountExpired, canAccountGenerate, getAccountRemaining, ACCOUNT_LIMITS } from '@/lib/accounts'
+import { verifyJWT, findAccountById, isAccountExpired, canAccountGenerate, getRemainingGenerations, ACCOUNT_LIMITS } from '@/lib/accounts-db'
 
 // GET – return current account status
 export async function GET(request: NextRequest) {
@@ -14,12 +14,12 @@ export async function GET(request: NextRequest) {
       remaining: ACCOUNT_LIMITS.free,
       expired: false,
       canGenerate: true,
-      expires: null,
+      subscriptionExpiresAt: null,
       loggedIn: false,
     })
   }
 
-  const accountId = await verifyToken(token)
+  const accountId = await verifyJWT(token)
   if (!accountId) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
   }
@@ -30,10 +30,14 @@ export async function GET(request: NextRequest) {
   }
 
   const expired = isAccountExpired(account)
-  const remaining = getAccountRemaining(account)
-  const limit = account.tier === 'basic'
+  const remaining = getRemainingGenerations(account)
+  const limit = account.tier === 'free'
+    ? ACCOUNT_LIMITS.free
+    : account.tier === 'basic'
     ? ACCOUNT_LIMITS.basic
-    : ACCOUNT_LIMITS[account.tier] === Infinity ? null : ACCOUNT_LIMITS[account.tier]
+    : account.tier === 'standard'
+    ? ACCOUNT_LIMITS.standard
+    : null
 
   return NextResponse.json({
     tier: account.tier,
@@ -43,7 +47,7 @@ export async function GET(request: NextRequest) {
     remaining,
     expired,
     canGenerate: canAccountGenerate(account),
-    expires: account.expires,
+    subscriptionExpiresAt: account.expires,
     loggedIn: true,
   })
 }

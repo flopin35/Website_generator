@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { findAccountById, findAccountByEmail, saveAccount, todayStr, type Tier } from '@/lib/accounts'
+import { findAccountById, findAccountByEmail } from '@/lib/accounts-db'
+import { prisma } from '@/lib/db'
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'doltsite-admin-2025'
 
@@ -22,21 +23,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 })
     }
 
-    const expires = new Date()
-    expires.setDate(expires.getDate() + Number(days))
+    const expiresAt = new Date()
+    expiresAt.setDate(expiresAt.getDate() + Number(days))
 
-    account.tier = tier as Tier
-    account.usage = 0
-    account.dailyUsage = 0
-    account.lastReset = todayStr()
-    account.expires = expires.toISOString()
-
-    await saveAccount(account)
+    // Update account with new tier and reset usage
+    const updated = await prisma.account.update({
+      where: { id: account.id },
+      data: {
+        tier: tier as any,
+        subscriptionStatus: 'active',
+        subscriptionExpiresAt: expiresAt,
+        generationsUsed: 0,
+        lastResetAt: new Date(),
+      },
+    })
 
     return NextResponse.json({
       success: true,
       message: `Account upgraded to ${tier}`,
-      account: { id: account.id, email: account.email, tier: account.tier, expires: account.expires }
+      account: { 
+        id: updated.id, 
+        email: updated.email, 
+        tier: updated.tier, 
+        subscriptionExpiresAt: updated.subscriptionExpiresAt?.toISOString() 
+      }
     })
   } catch {
     return NextResponse.json({ error: 'Failed to upgrade account' }, { status: 500 })

@@ -9,6 +9,7 @@
 **NEVER trust frontend data for limits.**
 
 Always:
+
 1. Fetch user from database
 2. Check their plan/tier
 3. Check their usage/limit
@@ -19,6 +20,7 @@ Always:
 ## 📊 Database Structure
 
 ### Users Table (`accounts`)
+
 ```
 id               → Unique user ID
 email            → Login email
@@ -35,6 +37,7 @@ createdAt        → Account created timestamp
 ```
 
 ### Generations Table (`generations`)
+
 ```
 id               → Unique generation ID
 accountId        → Which user generated this
@@ -45,6 +48,7 @@ countedTowardLimit → true (counted) or false (demo/free)
 ```
 
 ### Payments Table (`payments`)
+
 ```
 id               → Unique payment ID
 accountId        → Which user paid
@@ -60,6 +64,7 @@ completedAt      → When payment was approved
 ## 🎯 Generation Limits Logic
 
 ### Free Tier
+
 - **Limit:** 3 generations per day
 - **Reset:** Daily (every 24 hours at first generation of day)
 - **Enforcement:**
@@ -73,11 +78,13 @@ completedAt      → When payment was approved
   ```
 
 ### Basic Tier (20 GHS/month)
+
 - **Limit:** 10 generations per day
 - **Reset:** Daily
 - **Check:** Same as free, but generationsLimit = 10
 
 ### Standard Tier (50 GHS/month)
+
 - **Limit:** 200 generations per month
 - **Reset:** Monthly (on subscription renewal date)
 - **Enforcement:**
@@ -92,6 +99,7 @@ completedAt      → When payment was approved
   ```
 
 ### Premium Tier (250 GHS/month)
+
 - **Limit:** Unlimited
 - **Enforcement:**
   ```javascript
@@ -110,42 +118,48 @@ completedAt      → When payment was approved
 **File: `app/api/generate.ts`**
 
 ```typescript
-import { prisma } from '@/lib/db'
+import { prisma } from "@/lib/db";
 
 export async function POST(req: Request) {
-  const { accountId, description } = await req.json()
+  const { accountId, description } = await req.json();
 
   // 🔥 NEVER trust frontend
   // Always fetch from database
   const user = await prisma.account.findUnique({
     where: { id: accountId },
-  })
+  });
 
   if (!user) {
-    return Response.json({ error: 'User not found' }, { status: 404 })
+    return Response.json({ error: "User not found" }, { status: 404 });
   }
 
   // 💀 Check subscription validity
-  if (user.subscriptionStatus === 'expired') {
-    return Response.json({ 
-      error: 'subscription_expired',
-      message: 'Please renew your subscription'
-    }, { status: 403 })
+  if (user.subscriptionStatus === "expired") {
+    return Response.json(
+      {
+        error: "subscription_expired",
+        message: "Please renew your subscription",
+      },
+      { status: 403 },
+    );
   }
 
   // 💀 Check generation limit
   if (user.generationsUsed >= user.generationsLimit) {
-    return Response.json({ 
-      error: 'limit_exceeded',
-      message: `You've reached your ${user.generationsLimit} generation limit`,
-      limit: user.generationsLimit,
-      used: user.generationsUsed,
-    }, { status: 403 })
+    return Response.json(
+      {
+        error: "limit_exceeded",
+        message: `You've reached your ${user.generationsLimit} generation limit`,
+        limit: user.generationsLimit,
+        used: user.generationsUsed,
+      },
+      { status: 403 },
+    );
   }
 
   // ✅ User can generate
   // Generate the website
-  const html = await generateWebsite(description)
+  const html = await generateWebsite(description);
 
   // ✅ Update database IMMEDIATELY
   const updated = await prisma.account.update({
@@ -154,7 +168,7 @@ export async function POST(req: Request) {
       generationsUsed: user.generationsUsed + 1,
       lastGenerationAt: new Date(),
     },
-  })
+  });
 
   // ✅ Log generation for audit trail
   await prisma.generation.create({
@@ -164,13 +178,13 @@ export async function POST(req: Request) {
       htmlOutput: html,
       countedTowardLimit: true,
     },
-  })
+  });
 
-  return Response.json({ 
+  return Response.json({
     html,
     remaining: user.generationsLimit - (user.generationsUsed + 1),
     tier: user.tier,
-  })
+  });
 }
 ```
 
@@ -184,24 +198,24 @@ export async function POST(req: Request) {
 // File: app/api/cron/reset-daily-limits.ts
 // Called by external cron service (e.g., EasyCron, Vercel Crons)
 
-import { prisma } from '@/lib/db'
+import { prisma } from "@/lib/db";
 
 export async function POST(req: Request) {
   // Reset daily limits for free and basic tier users
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   await prisma.account.updateMany({
     where: {
-      tier: { in: ['free', 'basic'] },
+      tier: { in: ["free", "basic"] },
       lastResetAt: { lt: yesterday },
     },
     data: {
       generationsUsed: 0,
       lastResetAt: new Date(),
     },
-  })
+  });
 
-  return Response.json({ success: true })
+  return Response.json({ success: true });
 }
 ```
 
@@ -213,47 +227,52 @@ export async function POST(req: Request) {
 // File: app/api/payment/approve.ts
 // Called when payment is approved
 
-import { prisma } from '@/lib/db'
+import { prisma } from "@/lib/db";
 
 export async function POST(req: Request) {
-  const { accountId, paymentId, momoReference } = await req.json()
+  const { accountId, paymentId, momoReference } = await req.json();
 
   // ✅ Update payment status
   const payment = await prisma.payment.update({
     where: { id: paymentId },
     data: {
-      status: 'completed',
+      status: "completed",
       reference: momoReference,
       completedAt: new Date(),
     },
-  })
+  });
 
   // ✅ Update user subscription
-  const newExpiryDate = new Date()
-  newExpiryDate.setMonth(newExpiryDate.getMonth() + 1)
+  const newExpiryDate = new Date();
+  newExpiryDate.setMonth(newExpiryDate.getMonth() + 1);
 
   await prisma.account.update({
     where: { id: accountId },
     data: {
       tier: payment.tier,
-      subscriptionStatus: 'active',
+      subscriptionStatus: "active",
       subscriptionExpiresAt: newExpiryDate,
-      generationsUsed: 0,        // Reset for new month
+      generationsUsed: 0, // Reset for new month
       generationsLimit: getTierLimit(payment.tier),
-      lastResetAt: new Date(),   // Mark reset time
+      lastResetAt: new Date(), // Mark reset time
     },
-  })
+  });
 
-  return Response.json({ success: true })
+  return Response.json({ success: true });
 }
 
 function getTierLimit(tier: string): number {
   switch (tier) {
-    case 'free': return 3
-    case 'basic': return 10
-    case 'standard': return 200
-    case 'premium': return Infinity
-    default: return 0
+    case "free":
+      return 3;
+    case "basic":
+      return 10;
+    case "standard":
+      return 200;
+    case "premium":
+      return Infinity;
+    default:
+      return 0;
   }
 }
 ```
@@ -263,11 +282,15 @@ function getTierLimit(tier: string): number {
 ## 💀 Common Mistakes (DON'T DO THESE)
 
 ### ❌ Mistake 1: Track usage in localStorage
+
 ```javascript
 // WRONG ❌
-const usage = localStorage.getItem('generationsUsed')
-if (usage >= 3) { block() }
-else { allow() }
+const usage = localStorage.getItem("generationsUsed");
+if (usage >= 3) {
+  block();
+} else {
+  allow();
+}
 
 // Why it fails:
 // - User refreshes page → count resets
@@ -277,6 +300,7 @@ else { allow() }
 ```
 
 ### ❌ Mistake 2: Trust frontend for limit checking
+
 ```javascript
 // WRONG ❌
 // Frontend sends: { accountId, canGenerate: true }
@@ -289,6 +313,7 @@ else { allow() }
 ```
 
 ### ❌ Mistake 3: Don't reset limits
+
 ```javascript
 // WRONG ❌
 // User hits limit: generationsUsed = 3
@@ -300,6 +325,7 @@ else { allow() }
 ```
 
 ### ❌ Mistake 4: Store everything in Redis (original problem)
+
 ```javascript
 // WRONG ❌
 // User registered → stored in Redis only
@@ -340,32 +366,35 @@ else { allow() }
 ## 📊 Database Queries You'll Need
 
 ### Get user's remaining generations
+
 ```sql
-SELECT 
+SELECT
   generationsLimit - generationsUsed as remaining,
   tier,
   subscriptionStatus
-FROM accounts 
+FROM accounts
 WHERE id = $1;
 ```
 
 ### Check if user can generate
+
 ```sql
-SELECT 
-  CASE 
+SELECT
+  CASE
     WHEN subscriptionStatus = 'expired' THEN 'subscription_expired'
     WHEN generationsUsed >= generationsLimit THEN 'limit_exceeded'
     ELSE 'allowed'
   END as status
-FROM accounts 
+FROM accounts
 WHERE id = $1;
 ```
 
 ### Count generations for user this month
+
 ```sql
 SELECT COUNT(*) as count
 FROM generations
-WHERE accountId = $1 
+WHERE accountId = $1
   AND generatedAt > NOW() - INTERVAL '30 days';
 ```
 
@@ -374,6 +403,7 @@ WHERE accountId = $1
 ## 🎯 Why This Matters
 
 With this system:
+
 - ✅ **Fair pricing** - Users can't cheat the limits
 - ✅ **Revenue protection** - Free users become paid users
 - ✅ **Reliable** - Data persists in PostgreSQL

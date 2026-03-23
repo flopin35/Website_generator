@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
-  verifyToken, findAccountById,
-  canAccountGenerate, incrementAccountUsage, isAccountExpired,
-} from '@/lib/accounts'
+  verifyJWT, findAccountById,
+  canAccountGenerate, incrementUsage, isAccountExpired,
+} from '@/lib/accounts-db'
 
 // Extract meaningful info from the description
 function parsePrompt(description: string) {
@@ -667,7 +667,7 @@ export async function POST(request: NextRequest) {
     // ── Account-based auth (preferred) ──────────────────────────────────────
     const token = request.cookies.get('doltsite-token')?.value
     if (token) {
-      const accountId = await verifyToken(token)
+      const accountId = await verifyJWT(token)
       const account = accountId ? await findAccountById(accountId) : null
       if (account) {
         if (isAccountExpired(account)) {
@@ -685,12 +685,12 @@ export async function POST(request: NextRequest) {
 
         const detectedTemplate = detectTemplate(description)
         const html = generateTemplates[detectedTemplate](description)
-        const updated = await incrementAccountUsage(account)
+        const updated = await incrementUsage(account.id)
 
         return NextResponse.json({
           success: true, html, template: detectedTemplate,
           message: 'Website generated successfully',
-          usage: updated.usage, tier: updated.tier,
+          usage: updated?.usage, tier: updated?.tier,
         })
       }
     }
